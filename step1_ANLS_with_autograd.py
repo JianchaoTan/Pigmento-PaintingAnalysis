@@ -477,28 +477,28 @@ def save_pigments(x_H, M, output_dir):
         pigments[:,i*h:i*h+h]=R_rgb[i]
     plt.imsave(output_dir+"primary_pigments_color-"+str(M)+".png", (pigments*255.0).round().astype(np.uint8))
 
-    from scipy.spatial import ConvexHull
-    hull=ConvexHull(R_rgb*255.0)
-    faces=hull.points[hull.simplices]
+    # from scipy.spatial import ConvexHull
+    # hull=ConvexHull(R_rgb*255.0)
+    # faces=hull.points[hull.simplices]
     with open(output_dir+"primary_pigments_color_vertex-"+str(M)+".js", "w") as fd:
-        json.dump({'vs': (R_rgb*255.0).tolist(),'faces': faces.tolist()}, fd)
+        json.dump({'vs': (R_rgb*255.0).tolist()}, fd)
 
   
-    xaxis=np.arange(L)
-    for i in xrange(M):
-        fig=plt.figure()
-        plt.plot(xaxis, K0[i], 'b-')
-        fig.savefig(output_dir+"primary_pigments_K_curve-"+str(i)+".png")
-        fig=plt.figure()
-        plt.plot(xaxis, S0[i], 'b-')
-        fig.savefig(output_dir+"primary_pigments_S_curve-"+str(i)+".png")
-        fig=plt.figure()
-        plt.plot(xaxis, R_vector[i], 'b-')
-        fig.savefig(output_dir+"primary_pigments_R_curve-"+str(i)+".png")
-        fig=plt.figure()
-        plt.plot(xaxis, K0[i]/S0[i], 'b-')
-        fig.savefig(output_dir+"primary_pigments_KS_curve-"+str(i)+".png")
-        plt.close('all')
+    # xaxis=np.arange(L)
+    # for i in xrange(M):
+    #     fig=plt.figure()
+    #     plt.plot(xaxis, K0[i], 'b-')
+    #     fig.savefig(output_dir+"primary_pigments_K_curve-"+str(i)+".png")
+    #     fig=plt.figure()
+    #     plt.plot(xaxis, S0[i], 'b-')
+    #     fig.savefig(output_dir+"primary_pigments_S_curve-"+str(i)+".png")
+    #     fig=plt.figure()
+    #     plt.plot(xaxis, R_vector[i], 'b-')
+    #     fig.savefig(output_dir+"primary_pigments_R_curve-"+str(i)+".png")
+    #     fig=plt.figure()
+    #     plt.plot(xaxis, K0[i]/S0[i], 'b-')
+    #     fig.savefig(output_dir+"primary_pigments_KS_curve-"+str(i)+".png")
+    #     plt.close('all')
 
 
 
@@ -875,6 +875,41 @@ def choose_good_initial_H_from_existing_H(arr, Existing_H, M, representative_col
 
 
 
+    def Get_closest_matching_color_and_Remove_duplicate_primary_color(diff):
+        ### diff shape is N1*M 
+        min_indices=np.argmin(diff,axis=0)#### shape is (M,)
+
+        # return min_indices
+
+        new_min_indices=min_indices.copy()
+        min_diff=np.ones(min_indices.shape)
+
+        # print diff[:,0]
+        # print min_indices[0]
+
+        for i in range(M):
+            min_diff[i]=diff[min_indices[i],i]
+
+        print min_indices
+        
+        for i in range(M-1):
+            for j in range(i+1,M):
+                if min_indices[i]==min_indices[j]:
+                    if min_diff[i]<=min_diff[j]:
+                        temp_diff=diff[:,j]
+                        temp_ind=np.argsort(temp_diff)
+                        ind=temp_ind[1] #### temp_ind[1] is second smallest indices
+                        new_min_indices[j]=ind
+                        min_diff[j]=temp_diff[ind]
+                    else:
+                        temp_diff=diff[:,i]
+                        temp_ind=np.argsort(temp_diff)
+                        ind=temp_ind[1] #### temp_ind[1] is second smallest indices
+                        new_min_indices[i]=ind
+                        min_diff[i]=temp_diff[ind]
+
+        return new_min_indices
+
 
 
     if choose_corresponding_existing_KS_RGB_color_choice==0:  ####default option
@@ -893,7 +928,12 @@ def choose_good_initial_H_from_existing_H(arr, Existing_H, M, representative_col
         ##### get closet corresponding RGB colors indices.
         diff=R_rgb.reshape((-1,1,3))-Hull_vertices.reshape((1,M,3)) #### shape is N1*M*3
         diff=np.square(diff).sum(axis=2) ### shape is (N1,M)
-        min_indices=np.argmin(diff,axis=0)#### shape is (M,)
+
+
+        # min_indices=np.argmin(diff,axis=0)#### shape is (M,)
+        
+        min_indices=Get_closest_matching_color_and_Remove_duplicate_primary_color(diff)
+
 
         for i in range(M):
             H[i]=Existing_H[min_indices[i]]
@@ -938,11 +978,20 @@ def choose_good_initial_H_from_existing_H(arr, Existing_H, M, representative_col
         ##### get closet corresponding RGB colors indices.
         diff=R_rgb.reshape((-1,1,3))-Hull_vertices.reshape((1,M,3)) #### shape is N1*M*3
         diff=np.square(diff).sum(axis=2) ### shape is (N1,M)
-        min_indices=np.argmin(diff,axis=0)#### shape is (M,)
+
+
+        # min_indices=np.argmin(diff,axis=0)#### shape is (M,) ### sometimes two different vertices will match same okumura RGB color.
+        
+        min_indices=Get_closest_matching_color_and_Remove_duplicate_primary_color(diff)
+
+
 
         for i in range(M):
             H[i]=Existing_H[min_indices[i]]
             RGB_colors[i,:,:]=R_rgb[min_indices[i]]
+
+        
+
 
 
     elif choose_corresponding_existing_KS_RGB_color_choice==2: ### solve optimization
@@ -1187,7 +1236,28 @@ def sample_RGBcolors(RGB_colors, sample_num, bin_num=16):
 
 
 
+def sample_RGBcolors_new(RGB_colors, sample_num, bin_num=16):
+    data=RGB_colors.reshape((-1,3))
+    hull=ConvexHull(data)
+    vertices=hull.points[hull.vertices]
+    vertices_num=len(vertices)
+    print vertices_num
 
+    return vertices.reshape((-1,1,3)).astype(np.uint8) ####  directly use hull vertices to be sampled pixels
+
+    if vertices_num>sample_num:
+        print "Already increase sample pixel number to 900"
+        sample_num=900
+        
+    sample_pixels=np.ones((sample_num,1, 3), dtype=np.uint8)
+
+    sample_pixels[:vertices_num,0,:]=vertices
+    
+    if vertices_num<sample_num:
+        sampled_RGB_colors=sample_RGBcolors(RGB_colors, sample_num-vertices_num)
+        sample_pixels[vertices_num:, :, :]=sampled_RGB_colors
+    
+    return sample_pixels
 
 
 ### Four usage examples:
@@ -1250,8 +1320,14 @@ if __name__=="__main__":
     
     img=np.asarray(Image.open(base_dir+img_file).convert('RGB'))
     print img.shape
-    arr=sample_RGBcolors(img.reshape((-1,3)), sample_num) #### sample pixels from image. sample_num is set to be square number. like 400, 625, 900, 1600 and so on.
-    arr=arr.reshape((np.int(sqrt(sample_num)),np.int(sqrt(sample_num)),3))
+
+
+    # arr=sample_RGBcolors(img.reshape((-1,3)), sample_num) #### sample pixels from image. sample_num is set to be square number. like 400, 625, 900, 1600 and so on.
+    arr=sample_RGBcolors_new(img.reshape((-1,3)), sample_num)
+
+    # arr=arr.reshape((np.int(sqrt(sample_num)),np.int(sqrt(sample_num)),3))
+    arr=arr.reshape((-1,1,3))
+
     Image.fromarray(arr).save(base_dir+"/sampled_pixels-"+str(sample_num)+".png")
     arr=arr/255.0
 
@@ -1275,7 +1351,10 @@ if __name__=="__main__":
 
     elif KS_choice==2 and KS_file_name!="None":
         Existing_H=np.loadtxt(base_dir+KS_file_name)
+
         H, RGB_Colors,Hull_vertices=choose_good_initial_H_from_existing_H(arr, Existing_H, M, representative_color_choice, choose_corresponding_existing_KS_RGB_color_choice, output_prefix_copy)
+        # H, RGB_Colors,Hull_vertices=choose_good_initial_H_from_existing_H(img.reshape((-1,3))/255.0, Existing_H, M, representative_color_choice, choose_corresponding_existing_KS_RGB_color_choice, output_prefix_copy)
+
         print H.shape
 
 
@@ -1344,11 +1423,11 @@ if __name__=="__main__":
         save_pigments(recover_H.reshape(-1), M, base_dir+"/")
         save_results(recover_W.reshape(-1), arr, recover_H, output_prefix+"-Weights"+"-alternate_loop-"+str(final_loop)+"-")
 
-        # #### measure groundtruth and recovered H. 
-        # if gt_H_name!="None":
-        #     gt_H=np.loadtxt(base_dir+gt_H_name)
-        #     from Compare_Recovered_KS_with_GT_KS import *
-        #     Visualize_Recovered_KS_with_GT_KS(gt_H, recover_H, output_prefix_copy+"/pigments-display")
+        #### measure groundtruth and recovered H. 
+        if gt_H_name!="None":
+            gt_H=np.loadtxt(base_dir+gt_H_name)
+            from Compare_Recovered_KS_with_GT_KS import *
+            Visualize_Recovered_KS_with_GT_KS(gt_H, recover_H, output_prefix_copy+"/pigments-display")
 
 
     END=time.time()
