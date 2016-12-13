@@ -1,5 +1,5 @@
 # README
-* The input image should be a good size, like 600*600. If it is large image, it will be slow for weights map exraction or layer map extraction.
+* The input image should be a good size, like 600*600. If it is large image, it will be slow for weights map extraction or layer map extraction.
 
 
 #### Dependencies:
@@ -27,12 +27,9 @@
 ##### 1. Extract primary pigments: 
 User can give number of pigmetns, for example, "6" in the command line below.
 ```sh
-	$ cd /new_pipeline_exectuable
+	$ cd new_pipeline_executable
 
-	$ python step1_ANLS_with_autograd.py wheatfield-crop.png
-	Existing_KS_parameter_KS.txt 2 None wheatfield-sampled_pixels-400 
-	0 6 10.0 0.0 0.0 0.001 0.001 1e-6 /wheatfield-crop None 0 1 1000 
-	400
+	$ python step1_ANLS_with_autograd.py wheatfield-crop.png Existing_KS_parameter_KS.txt 2 None wheatfield-sampled_pixels-400 0 6 10.0 0.0 0.0 0.001 0.001 1e-6 /wheatfield-crop None 0 1 1000 400
 ```
 
 
@@ -40,7 +37,7 @@ User can give number of pigmetns, for example, "6" in the command line below.
 You can use default parameter values in command line directly, only need change example name.
 
 ```sh
-	$ cd /new_pipeline_exectuable/wheatfield-crop
+	$ cd new_pipeline_executable/wheatfield-crop
 
 	$ python ../Solve_KM_mixing_model_fixed_KS_with_autograd.py
 	wheatfield-crop.png  primary_pigments_KS-6.txt  None
@@ -52,7 +49,7 @@ You can use default parameter values in command line directly, only need change 
 ##### 3. Extract layers: 
 You need create a layer order file manually, for example: "wheatfield-pigments-order1.txt", which contains order: 0 1 2 3 4 5 or their permutations.
 ```sh
-	$ cd /new_pipeline_exectuable/wheatfield-crop
+	$ cd new_pipeline_executable/wheatfield-crop
 
 	$ python ../Solve_KM_layer_model_fixed_KS_with_autograd.py 
 	wheatfield-crop.png  primary_pigments_KS-6.txt  None
