@@ -1,8 +1,8 @@
-.png
-.txt
-.jpg
-.a
-.o
-.pyc
-.jpeg
-.js
+*.png
+*.txt
+*.jpg
+*.a
+*.o
+*.pyc
+*.jpeg
+*.js
