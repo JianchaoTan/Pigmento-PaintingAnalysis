@@ -2,7 +2,7 @@ To run all the code, you may need change "base_dir" variable in "step1_ANLS_with
 
 
 Install:
-	 Python
+	 Python 2.7
 	 Numpy
 	 Scipy
 	 Pillow
