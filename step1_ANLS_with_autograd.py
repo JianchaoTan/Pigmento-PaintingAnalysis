@@ -13,6 +13,7 @@ from Constant_Values import *
 from SILD_convexhull_simplification import *
 import fast_energy_laplacian
 import scipy.sparse
+import os
 
 
 from autograd.numpy import *
@@ -1315,6 +1316,7 @@ if __name__=="__main__":
 
     # base_dir="/Users/jianchao/Documents/Research/Adobe_Jianchao/Brushstroke_Project/Adobe_inside/CODE/pigment-parameters-newVersion/new_pipeline_executable"
     base_dir = os.path.split( os.path.realpath(__file__) )[0]
+    print base_dir
     base_dir=base_dir+foldername+"/"
     output_prefix_copy=base_dir+output_prefix
     make_sure_path_exists(output_prefix_copy)
