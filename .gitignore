@@ -6,3 +6,5 @@
 *.pyc
 *.jpeg
 *.js
+.DS_Store
+*~
