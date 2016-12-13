@@ -13,6 +13,7 @@ from Constant_Values import *
 from SILD_convexhull_simplification import *
 import fast_energy_laplacian
 import scipy.sparse
+import os
 
 
 from autograd.numpy import *
@@ -1312,7 +1313,10 @@ if __name__=="__main__":
     output_prefix=output_prefix+"-KS_choice-"+str(KS_choice)+"-solve_choice-"+str(solve_choice)+"-M-"+str(M)+"-representative_color_choice-"+str(representative_color_choice)+"-choose_corresponding_existing_KS_RGB_color_choice-"+str(choose_corresponding_existing_KS_RGB_color_choice)
     output_prefix=output_prefix+"-W_w-"+str(W_w)+"-W_sparse-"+str(W_sparse)+"-W_spatial-"+str(W_spatial)+"-W_sm_K-"+str(W_sm_K)+"-W_sm_S-"+str(W_sm_S)+"-W_sm_KS-"+str(W_sm_KS)+"-max_loop-"+str(max_loop)
 
-    base_dir="/Users/jianchao/Documents/Research/Adobe_Jianchao/Brushstroke_Project/Adobe_inside/CODE/pigment-parameters-newVersion/new_pipeline_executable"
+    # base_dir="/Users/jianchao/Documents/Research/Adobe_Jianchao/Brushstroke_Project/Adobe_inside/CODE/pigment-parameters-newVersion/new_pipeline_executable"
+    base_dir = os.path.split( os.path.realpath(__file__) )[0]
+    print base_dir
+
     base_dir=base_dir+foldername+"/"
     output_prefix_copy=base_dir+output_prefix
     make_sure_path_exists(output_prefix_copy)
