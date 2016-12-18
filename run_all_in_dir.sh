@@ -1,6 +1,5 @@
 #!/bin/bash
 set -x
-set -e
 
 # runs all images in images/ directory.
 # puts per-image results in output/ directory.

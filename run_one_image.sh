@@ -2,7 +2,12 @@
 set -x
 set -e
 
-convert=`which convert`
+if [[ -z `python --version 2>&1 | grep 2.7` ]]; then
+	source activate py2_env
+fi
+if [[ -z `python --version 2>&1 | grep 2.7` ]]; then
+	echo "WARNING: not python 2.7, probably won't work!"
+fi
 
 input="$1"
 pigments="$2"
@@ -23,7 +28,7 @@ fi
 
 mkdir -p $dir
 cp wheatfield-crop/Existing* $dir
-$convert $input -resize 600x600 $dir/$image
+convert $input -resize 600x600 $dir/$image
 rm -f $dir/$log
 rm -f $dir/$html
 
