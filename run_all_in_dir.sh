@@ -6,6 +6,11 @@ set -e
 # puts per-image results in output/ directory.
 # puts aggregate results in webpage/ directory.
 
+indir="$1"
+if [[ -z $indir ]]; then
+	indir="images"
+fi
+
 mkdir -p webpage
 mkdir -p output
 
@@ -16,7 +21,7 @@ rm -f $rows
 touch $rows
 
 for p in 5 4 6; do
-	for image in images/*; do
+	for image in $indir/*; do
 		./run_one_image.sh $image $p
 
 		base="`basename ${image%.*}`"
