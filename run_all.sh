@@ -42,7 +42,7 @@ EOF
 		cp $dir/$input \
 			$dir/index.html \
 			$dir/log.txt \
-			$dir/primary_Pigments_color-${p}.png \
+			$dir/primary_pigments_color-${p}.png \
 			$dir/primary_pigments_*_curve-*.png \
 			$dir/*-final_recursivelevel--fixed_KS-reconstructed.png \
 			$dir/*-final_recursivelevel--mixing_weights_map-*.png \
