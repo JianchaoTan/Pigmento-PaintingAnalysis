@@ -485,21 +485,21 @@ def save_pigments(x_H, M, output_dir):
         json.dump({'vs': (R_rgb*255.0).tolist()}, fd)
 
   
-    # xaxis=np.arange(L)
-    # for i in xrange(M):
-    #     fig=plt.figure()
-    #     plt.plot(xaxis, K0[i], 'b-')
-    #     fig.savefig(output_dir+"primary_pigments_K_curve-"+str(i)+".png")
-    #     fig=plt.figure()
-    #     plt.plot(xaxis, S0[i], 'b-')
-    #     fig.savefig(output_dir+"primary_pigments_S_curve-"+str(i)+".png")
-    #     fig=plt.figure()
-    #     plt.plot(xaxis, R_vector[i], 'b-')
-    #     fig.savefig(output_dir+"primary_pigments_R_curve-"+str(i)+".png")
-    #     fig=plt.figure()
-    #     plt.plot(xaxis, K0[i]/S0[i], 'b-')
-    #     fig.savefig(output_dir+"primary_pigments_KS_curve-"+str(i)+".png")
-    #     plt.close('all')
+    xaxis=np.arange(L)
+    for i in xrange(M):
+        fig=plt.figure()
+        plt.plot(xaxis, K0[i], 'b-')
+        fig.savefig(output_dir+"primary_pigments_K_curve-"+str(i)+".png")
+        fig=plt.figure()
+        plt.plot(xaxis, S0[i], 'b-')
+        fig.savefig(output_dir+"primary_pigments_S_curve-"+str(i)+".png")
+        fig=plt.figure()
+        plt.plot(xaxis, R_vector[i], 'b-')
+        fig.savefig(output_dir+"primary_pigments_R_curve-"+str(i)+".png")
+        fig=plt.figure()
+        plt.plot(xaxis, K0[i]/S0[i], 'b-')
+        fig.savefig(output_dir+"primary_pigments_KS_curve-"+str(i)+".png")
+        plt.close('all')
 
 
 
@@ -792,20 +792,20 @@ def KM_solve_ANLS(arr, W, H, output_prefix, max_loop, W_w, W_sparse, W_spatial, 
             diff=x_H-x_initial
 
             max_diff_ratio=(abs(diff)/np.minimum(x_H,x_initial)).max()
-            print max_diff_ratio
+            # print max_diff_ratio
 
 
             final_loop=loop
             
             if max_diff_ratio<=thres:
-                print "H diff abs max value is smaller than "+str(thres)+" after "+str(loop)+" iterations"
+                print "Two iteration's H abs difference ratio's maximum value is smaller than "+str(thres)+" after "+str(loop)+" iterations"
                 thres=thres/10
 
             if max_diff_ratio<=1e-3 or loop==(max_loop-2):
                 print max_diff_ratio
                 abs_diff=abs(diff).reshape((M,-1))
-                print abs_diff
-                print loop
+                print "Fianl H's abs diff with last iteration's H:\n", abs_diff
+                print "total iterations: ", loop
                 # K_diff=abs_diff[:,:L]
                 # print K_diff.max()
                 # S_diff=abs_diff[:,L:]
@@ -820,6 +820,31 @@ def KM_solve_ANLS(arr, W, H, output_prefix, max_loop, W_w, W_sparse, W_spatial, 
 
 
 
+def Choose_initial_using_KKZ(data, num, option=0):
+    initial_centers=np.zeros((num,data.shape[1]))
+    if option==0:
+        #### from http://www.ece.neu.edu/fac-ece/jdy/papers/initialization-su-dy-ida07.pdf
+        Dist=scipy.spatial.distance.pdist(data, metric='euclidean')
+        Dist_sum=Dist.sum(axis=0)
+        max_ind=np.argmax(Dist_sum)
+        initial_centers[:,:]=data[max_ind,:] ### first center
+        data=np.delete(data, max_ind, 0)
+        for i in range(1,num):
+            ind=np.argmax((np.square(data.reshape((-1,1,3))-initial_centers[:i,:].reshape((1,-1,3))).sum(axis=2)).min(axis=1))
+            initial_centers[i,:]=data[ind,:]
+            data=np.delete(data, ind, 0)
+
+    if option==1:
+        initial_centers=data[:num,:]
+
+    print initial_centers
+    return initial_centers
+
+
+
+
+
+
 
 
 
@@ -830,6 +855,7 @@ def choose_good_initial_H_from_existing_H(arr, Existing_H, M, representative_col
     data=arr.reshape((-1,3))
     from scipy.spatial import ConvexHull
     from sklearn.cluster import KMeans
+    from sklearn.decomposition import PCA
     output_rawhull_obj_file=output_prefix+"/SILD_mesh_objfile.obj"
 
 
@@ -861,7 +887,10 @@ def choose_good_initial_H_from_existing_H(arr, Existing_H, M, representative_col
 
         Hull=ConvexHull(data)
         Hull_vertices=Hull.points[Hull.vertices]
-        k_means = KMeans(n_clusters=M, n_init=4)
+
+        initial_centers=Choose_initial_using_KKZ(Hull_vertices, M, option=1)
+
+        k_means = KMeans(init=initial_centers, n_clusters=M, n_init=1)
         k_means.fit(Hull_vertices)
         values = k_means.cluster_centers_.squeeze()
         Hull_vertices=values.copy()
@@ -869,7 +898,10 @@ def choose_good_initial_H_from_existing_H(arr, Existing_H, M, representative_col
 
 
     elif representative_color_choice==2: 
-        k_means = KMeans(n_clusters=M, n_init=4)
+
+        initial_centers=Choose_initial_using_KKZ(data, M, option=1)
+
+        k_means = KMeans(init=initial_centers, n_clusters=M, n_init=1)
         k_means.fit(data)
         values = k_means.cluster_centers_.squeeze()
         Hull_vertices=values.copy()
@@ -1111,67 +1143,67 @@ def choose_good_initial_H_from_existing_H(arr, Existing_H, M, representative_col
 
 
 
-def choose_good_initial_H_from_existing_H_for_patch_with_2_pigments_model(arr, Existing_H, M=2):
-    #### svd to get primary dirction, and project patch color points on to that axis.
-    L=Existing_H.shape[-1]/2
-    arr=arr.reshape((-1,3))
-    arr_mean=arr.mean(axis=0)
+# def choose_good_initial_H_from_existing_H_for_patch_with_2_pigments_model(arr, Existing_H, M=2):
+#     #### svd to get primary dirction, and project patch color points on to that axis.
+#     L=Existing_H.shape[-1]/2
+#     arr=arr.reshape((-1,3))
+#     arr_mean=arr.mean(axis=0)
 
-    uu,ss,vv=np.linalg.svd(arr-arr_mean.reshape((-1,3)))
-    a=(vv[0].reshape((1,-1))*(arr-arr_mean)).sum(axis=1)
-    arr_projected_max=arr[a==a.max()][0]
-    arr_projected_min=arr[a==a.min()][0]
-    arr_projected=np.ones((2,3))
-    arr_projected[0]=arr_projected_max
-    arr_projected[1]=arr_projected_min
+#     uu,ss,vv=np.linalg.svd(arr-arr_mean.reshape((-1,3)))
+#     a=(vv[0].reshape((1,-1))*(arr-arr_mean)).sum(axis=1)
+#     arr_projected_max=arr[a==a.max()][0]
+#     arr_projected_min=arr[a==a.min()][0]
+#     arr_projected=np.ones((2,3))
+#     arr_projected[0]=arr_projected_max
+#     arr_projected[1]=arr_projected_min
     
 
-    Num=len(Existing_H)
-    Existing_H_expand=np.zeros((Num+Num*(Num-1)/2, Existing_H.shape[1]))
-    Existing_H_expand[:Num,:]=Existing_H[:,:]
-    count=0
-    for i in range(Num-1):
-        for j in range(i+1,Num):
-            Existing_H_expand[Num+count,:]=(Existing_H[i,:]+Existing_H[j,:])/2.0
-            count+=1
+#     Num=len(Existing_H)
+#     Existing_H_expand=np.zeros((Num+Num*(Num-1)/2, Existing_H.shape[1]))
+#     Existing_H_expand[:Num,:]=Existing_H[:,:]
+#     count=0
+#     for i in range(Num-1):
+#         for j in range(i+1,Num):
+#             Existing_H_expand[Num+count,:]=(Existing_H[i,:]+Existing_H[j,:])/2.0
+#             count+=1
 
-    Existing_H=Existing_H_expand.copy()
+#     Existing_H=Existing_H_expand.copy()
 
-    # np.savetxt(output_prefix+"/Existing_H_expand_KS.txt", Existing_H_expand)
-
-
-    ####compute existing KS pigments RGB colors
-    R_vector=equations_in_RealPigments(Existing_H[:,:L], Existing_H[:,L:], r=1.0, h=1.0)
-    ### from R spectrum x wavelength spectrums to linear rgb colors 
-    P_vector=R_vector*Illuminantnew[:,1].reshape((1,-1)) ### shape is M*L
-    R_xyz=(P_vector.reshape((-1,1,L))*R_xyzcoeff.reshape((1,3,L))).sum(axis=2)   ###shape M*3*L to shape N*3 
-    Normalize=(Illuminantnew[:,1]*R_xyzcoeff[1,:]).sum() ### scalar value.
-    R_xyz/=Normalize ####xyz value shape is M*3
-    R_rgb=np.dot(xyztorgb,R_xyz.transpose()).transpose() ###linear rgb value, shape is M*3
-    R_rgb=Gamma_trans_img(R_rgb.clip(0,1)) ##clip and gamma correction
+#     # np.savetxt(output_prefix+"/Existing_H_expand_KS.txt", Existing_H_expand)
 
 
-    # with open (output_prefix+"/Existing_H_expand_RGB_colors.js","w") as myfile:
-    #     json.dump({'vs': (R_rgb*255).tolist()}, myfile)
+#     ####compute existing KS pigments RGB colors
+#     R_vector=equations_in_RealPigments(Existing_H[:,:L], Existing_H[:,L:], r=1.0, h=1.0)
+#     ### from R spectrum x wavelength spectrums to linear rgb colors 
+#     P_vector=R_vector*Illuminantnew[:,1].reshape((1,-1)) ### shape is M*L
+#     R_xyz=(P_vector.reshape((-1,1,L))*R_xyzcoeff.reshape((1,3,L))).sum(axis=2)   ###shape M*3*L to shape N*3 
+#     Normalize=(Illuminantnew[:,1]*R_xyzcoeff[1,:]).sum() ### scalar value.
+#     R_xyz/=Normalize ####xyz value shape is M*3
+#     R_rgb=np.dot(xyztorgb,R_xyz.transpose()).transpose() ###linear rgb value, shape is M*3
+#     R_rgb=Gamma_trans_img(R_rgb.clip(0,1)) ##clip and gamma correction
 
-    # Image.fromarray((R_rgb*255).round().astype(np.uint8).reshape((Num/2, Num+1, -1))).save(output_prefix+"/Existing_H_expand_RGB_colors.png")
+
+#     # with open (output_prefix+"/Existing_H_expand_RGB_colors.js","w") as myfile:
+#     #     json.dump({'vs': (R_rgb*255).tolist()}, myfile)
+
+#     # Image.fromarray((R_rgb*255).round().astype(np.uint8).reshape((Num/2, Num+1, -1))).save(output_prefix+"/Existing_H_expand_RGB_colors.png")
 
 
      
-    ##### get closet corresponding RGB colors indices.
-    diff=R_rgb.reshape((-1,1,3))-arr_projected.reshape((1,M,3)) #### shape is N1*M*3
-    diff=np.square(diff).sum(axis=2) ### shape is (N1,M)
-    min_indices=np.argmin(diff,axis=0)#### shape is (M,)
+#     ##### get closet corresponding RGB colors indices.
+#     diff=R_rgb.reshape((-1,1,3))-arr_projected.reshape((1,M,3)) #### shape is N1*M*3
+#     diff=np.square(diff).sum(axis=2) ### shape is (N1,M)
+#     min_indices=np.argmin(diff,axis=0)#### shape is (M,)
 
-    H=np.ones((M,2*L))
-    RGB_colors=np.ones((M,1,3))
+#     H=np.ones((M,2*L))
+#     RGB_colors=np.ones((M,1,3))
 
-    for i in range(M):
-        H[i]=Existing_H[min_indices[i]]
-        RGB_colors[i,:,:]=R_rgb[min_indices[i]]
+#     for i in range(M):
+#         H[i]=Existing_H[min_indices[i]]
+#         RGB_colors[i,:,:]=R_rgb[min_indices[i]]
 
 
-    return H, RGB_colors*255.0, arr_projected*255.0
+#     return H, RGB_colors*255.0, arr_projected*255.0
 
 
 
@@ -1261,6 +1293,54 @@ def sample_RGBcolors_new(RGB_colors, sample_num, bin_num=16):
     return sample_pixels
 
 
+def sample_RGBcolors_new_use_avg_color_in_each_bin(RGB_colors, bin_num=16):
+    bin2count ={}
+    bin2xy ={}
+
+    import itertools
+    bin_list=itertools.product(np.arange(bin_num), repeat=3)
+    for element in bin_list:
+        bin2count[element]=0
+        bin2xy.setdefault(element,[])
+
+    step=256/bin_num
+    for index in range(len(RGB_colors)):
+        element=RGB_colors[index].copy()
+        element/=step
+        bin2count[tuple(element)]+=1
+        bin2xy[tuple(element)].append(index)
+
+    count_colors=np.array(bin2count.values())
+    bin_list_num=len(count_colors)
+    
+    # print count_colors.min()
+    # print count_colors.max()
+    NonEmptyNum=bin_list_num-len(count_colors[count_colors==0]) #### number of bins that contain at least one color of input image.
+    print NonEmptyNum
+        
+    i=0
+    sample_RGB_colors=np.zeros((NonEmptyNum,1,3),dtype=np.uint8)
+
+    for ind in range(bin_list_num):
+        x=ind/(bin_num*bin_num)
+        y=(ind-x*bin_num*bin_num)/bin_num
+        z=ind-x*bin_num*bin_num-y*bin_num
+        index_list=bin2xy[tuple(np.array([x,y,z]))]
+
+        if len(index_list)!=0:
+            ###got average color of nonempty bins to be sampled colors.
+            avg_RGB_colors=np.mean(RGB_colors[np.array(index_list).reshape(-1),:],axis=0)
+            sample_RGB_colors[i,0,:]=avg_RGB_colors.round()
+
+            i+=1
+
+    assert(i==NonEmptyNum)
+
+    return sample_RGB_colors
+
+
+
+
 ### Four usage examples:
 ### cd /sampled_pixels-flower-small-groundtruthTest/sampled_pixels-400
 ### python ../../step1_ANLS_with_autograd.py sampled_pixels-400.png None 0 None flower-small-groundtruth-sampled_pixels-400-ANLS-with_random_KS  0 5 10.0 0.1 0.0 0.005 0.05 1e-6
@@ -1328,6 +1408,8 @@ if __name__=="__main__":
 
     # arr=sample_RGBcolors(img.reshape((-1,3)), sample_num) #### sample pixels from image. sample_num is set to be square number. like 400, 625, 900, 1600 and so on.
     arr=sample_RGBcolors_new(img.reshape((-1,3)), sample_num)
+    # arr=sample_RGBcolors_new_use_avg_color_in_each_bin(img.reshape((-1,3)))
+
 
     # arr=arr.reshape((np.int(sqrt(sample_num)),np.int(sqrt(sample_num)),3))
     arr=arr.reshape((-1,1,3))
@@ -1358,6 +1440,10 @@ if __name__=="__main__":
 
         H, RGB_Colors,Hull_vertices=choose_good_initial_H_from_existing_H(arr, Existing_H, M, representative_color_choice, choose_corresponding_existing_KS_RGB_color_choice, output_prefix_copy)
         # H, RGB_Colors,Hull_vertices=choose_good_initial_H_from_existing_H(img.reshape((-1,3))/255.0, Existing_H, M, representative_color_choice, choose_corresponding_existing_KS_RGB_color_choice, output_prefix_copy)
+        
+        # image_unique_colors=np.array(list(set(list(tuple(item) for item in img.reshape((-1,3))))))
+        # print image_unique_colors.shape
+        # H, RGB_Colors,Hull_vertices=choose_good_initial_H_from_existing_H(image_unique_colors/255.0, Existing_H, M, representative_color_choice, choose_corresponding_existing_KS_RGB_color_choice, output_prefix_copy)
 
         print H.shape
 
