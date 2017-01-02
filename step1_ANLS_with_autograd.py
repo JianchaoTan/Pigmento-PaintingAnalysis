@@ -820,7 +820,7 @@ def KM_solve_ANLS(arr, W, H, output_prefix, max_loop, W_w, W_sparse, W_spatial, 
 
 
 
-def Choose_initial_using_KKZ(data, num, option=0):
+def Choose_initial(data, num, option=0):
     initial_centers=np.zeros((num,data.shape[1]))
     if option==0:
         #### from http://www.ece.neu.edu/fac-ece/jdy/papers/initialization-su-dy-ida07.pdf
@@ -834,10 +834,10 @@ def Choose_initial_using_KKZ(data, num, option=0):
             initial_centers[i,:]=data[ind,:]
             data=np.delete(data, ind, 0)
 
-    if option==1:
+    if option==1: #### choose first M points as initial value
         initial_centers=data[:num,:]
 
-    print initial_centers
+    # print initial_centers
     return initial_centers
 
 
@@ -846,9 +846,27 @@ def Choose_initial_using_KKZ(data, num, option=0):
 
 
 
+def Pallete_selection_Chang(image, M):
+    #### image is row*col*3 shape. dtype is uchar, range is 0,255
+    from palette.core.hist_3d import Hist3D
+    from palette.core.palette_selection import PaletteSelection
+        # 16 bins, Lab color space
+    hist3D = Hist3D(image, num_bins=16, color_space='Lab')
+
+    color_coordinates = hist3D.colorCoordinates()
+    color_densities = hist3D.colorDensities()
+    rgb_colors = hist3D.rgbColors()
+
+    # 5 colors from Lab color samples.
+    palette_selection = PaletteSelection(color_coordinates, color_densities, rgb_colors, num_colors=M, sigma=70.0)
+
+    results= (np.asarray(palette_selection.paletteColors())*255).round().astype(np.uint8)
+    return results
 
 
-def choose_good_initial_H_from_existing_H(arr, Existing_H, M, representative_color_choice=0, choose_corresponding_existing_KS_RGB_color_choice=0, output_prefix=None):
+
+
+def choose_good_initial_H_from_existing_H(image, arr, Existing_H, M, representative_color_choice=0, choose_corresponding_existing_KS_RGB_color_choice=0, output_prefix=None):
     L=Existing_H.shape[-1]/2
     H=np.ones((M,2*L))
     RGB_colors=np.ones((M,1,3))
@@ -888,7 +906,7 @@ def choose_good_initial_H_from_existing_H(arr, Existing_H, M, representative_col
         Hull=ConvexHull(data)
         Hull_vertices=Hull.points[Hull.vertices]
 
-        initial_centers=Choose_initial_using_KKZ(Hull_vertices, M, option=1)
+        initial_centers=Choose_initial(Hull_vertices, M, option=1)
 
         k_means = KMeans(init=initial_centers, n_clusters=M, n_init=1)
         k_means.fit(Hull_vertices)
@@ -899,12 +917,80 @@ def choose_good_initial_H_from_existing_H(arr, Existing_H, M, representative_col
 
     elif representative_color_choice==2: 
 
-        initial_centers=Choose_initial_using_KKZ(data, M, option=1)
+        initial_centers=Choose_initial(data, M, option=1)
 
         k_means = KMeans(init=initial_centers, n_clusters=M, n_init=1)
         k_means.fit(data)
         values = k_means.cluster_centers_.squeeze()
         Hull_vertices=values.copy()
+
+
+
+
+    elif representative_color_choice==3:  #### cgal alpha shape vertices.
+
+        with open(output_prefix+"/temp_data.txt","wa")as myfile:
+            myfile.write(str(len(data))+'\n')
+            np.savetxt(myfile, data*255)
+          
+        import subprocess
+        subprocess.call(['/Users/jianchao/Documents/Research/Adobe_Jianchao/Brushstroke_Project/Adobe_inside/CODE/pigment-parameters-newVersion/new_pipeline_executable/cgal_alpha_shape/executable', output_prefix+"/temp_data.txt", output_prefix+"/temp_data-alpha_shape"])
+        
+        data=np.loadtxt(output_prefix+"/temp_data-alpha_shape-vertices.txt")/255.0
+        print data.shape
+
+
+        
+
+        initial_centers=Choose_initial(data, M, option=1)
+        
+
+        # hull=ConvexHull(data)
+        # write_convexhull_into_obj_file(hull, output_rawhull_obj_file)
+        # N=500
+        # mesh=TriMesh.FromOBJ_FileName(output_rawhull_obj_file)
+        # for i in range(N):
+        #     old_num=len(mesh.vs)
+        #     mesh=TriMesh.FromOBJ_FileName(output_rawhull_obj_file)
+        #     mesh=remove_one_edge_by_finding_smallest_adding_volume_with_test_conditions(mesh,option=2)
+        #     newhull=ConvexHull(mesh.vs)
+        #     write_convexhull_into_obj_file(newhull, output_rawhull_obj_file)
+
+        #     if len(mesh.vs)==M:
+        #         Final_hull=newhull
+        #         break
+
+        # initial_centers=Final_hull.points[Final_hull.vertices].clip(0,1)
+
+
+        k_means = KMeans(init=initial_centers, n_clusters=M, n_init=1)
+        k_means.fit(data)
+        values = k_means.cluster_centers_.squeeze()
+        Hull_vertices=values.copy()
+
+
+
+    elif representative_color_choice==4:  ### pallete based photo recoloring paper as initial primay RGB colors.
+
+ 
+        Hull_vertices=Pallete_selection_Chang(image, M)
+        output_path=output_prefix+"/Chang_Palette_selection-"+str(M)+".png"
+        Image.fromarray(Hull_vertices.reshape((1,-1,3))).save(output_path)
+        Hull_vertices=Hull_vertices/255.0
+
+
+    elif representative_color_choice==5:  ### pallete based photo recoloring paper and then kmeans.
+
+
+        initial_centers=Pallete_selection_Chang(image, M)
+        output_path=output_prefix+"/Chang_Palette_selection-"+str(M)+".png"
+        Image.fromarray(initial_centers.reshape((1,-1,3))).save(output_path)
+
+        k_means = KMeans(init=initial_centers/255.0, n_clusters=M, n_init=1)
+        k_means.fit(data)
+        values = k_means.cluster_centers_.squeeze()
+        Hull_vertices=values.copy()
+
 
 
 
@@ -1377,6 +1463,9 @@ if __name__=="__main__":
     choose_corresponding_existing_KS_RGB_color_choice=np.int(sys.argv[17])
     max_loop=np.int(sys.argv[18])
     sample_num=np.int(sys.argv[19])
+    data_term_choice1=np.int(sys.argv[20])
+    data_term_choice2=np.int(sys.argv[21])
+
 
 
 
@@ -1393,10 +1482,12 @@ if __name__=="__main__":
 
     output_prefix=output_prefix+"-KS_choice-"+str(KS_choice)+"-solve_choice-"+str(solve_choice)+"-M-"+str(M)+"-representative_color_choice-"+str(representative_color_choice)+"-choose_corresponding_existing_KS_RGB_color_choice-"+str(choose_corresponding_existing_KS_RGB_color_choice)
     output_prefix=output_prefix+"-W_w-"+str(W_w)+"-W_sparse-"+str(W_sparse)+"-W_spatial-"+str(W_spatial)+"-W_sm_K-"+str(W_sm_K)+"-W_sm_S-"+str(W_sm_S)+"-W_sm_KS-"+str(W_sm_KS)+"-max_loop-"+str(max_loop)
-
+    output_prefix=output_prefix+"-"+str(data_term_choice1)+"-"+str(data_term_choice2)
+    
     # base_dir="/Users/jianchao/Documents/Research/Adobe_Jianchao/Brushstroke_Project/Adobe_inside/CODE/pigment-parameters-newVersion/new_pipeline_executable"
     base_dir = os.path.split( os.path.realpath(__file__) )[0]
-    print base_dir
+    # print base_dir
+    
     base_dir=base_dir+foldername+"/"
     output_prefix_copy=base_dir+output_prefix
     make_sure_path_exists(output_prefix_copy)
@@ -1406,9 +1497,18 @@ if __name__=="__main__":
     print img.shape
 
 
-    # arr=sample_RGBcolors(img.reshape((-1,3)), sample_num) #### sample pixels from image. sample_num is set to be square number. like 400, 625, 900, 1600 and so on.
-    arr=sample_RGBcolors_new(img.reshape((-1,3)), sample_num)
-    # arr=sample_RGBcolors_new_use_avg_color_in_each_bin(img.reshape((-1,3)))
+
+    if data_term_choice1==0:
+        #### data term is randomly sampled, not recommend. non-deterministic.
+        arr=sample_RGBcolors(img.reshape((-1,3)), sample_num) #### sample pixels from image. sample_num is set to be square number. like 400, 625, 900, 1600 and so on.
+    
+    elif data_term_choice1==1:
+        ### data term is convexhull points.
+        arr=sample_RGBcolors_new(img.reshape((-1,3)), sample_num)
+
+    elif data_term_choice1==2:
+        ## data term is each color bins avg color
+        arr=sample_RGBcolors_new_use_avg_color_in_each_bin(img.reshape((-1,3)))
 
 
     # arr=arr.reshape((np.int(sqrt(sample_num)),np.int(sqrt(sample_num)),3))
@@ -1437,15 +1537,28 @@ if __name__=="__main__":
 
     elif KS_choice==2 and KS_file_name!="None":
         Existing_H=np.loadtxt(base_dir+KS_file_name)
-
-        H, RGB_Colors,Hull_vertices=choose_good_initial_H_from_existing_H(arr, Existing_H, M, representative_color_choice, choose_corresponding_existing_KS_RGB_color_choice, output_prefix_copy)
-        # H, RGB_Colors,Hull_vertices=choose_good_initial_H_from_existing_H(img.reshape((-1,3))/255.0, Existing_H, M, representative_color_choice, choose_corresponding_existing_KS_RGB_color_choice, output_prefix_copy)
         
-        # image_unique_colors=np.array(list(set(list(tuple(item) for item in img.reshape((-1,3))))))
-        # print image_unique_colors.shape
-        # H, RGB_Colors,Hull_vertices=choose_good_initial_H_from_existing_H(image_unique_colors/255.0, Existing_H, M, representative_color_choice, choose_corresponding_existing_KS_RGB_color_choice, output_prefix_copy)
+        if data_term_choice2==0:
+
+            ### input is sampled data
+            H, RGB_Colors,Hull_vertices=choose_good_initial_H_from_existing_H(img, arr, Existing_H, M, representative_color_choice, choose_corresponding_existing_KS_RGB_color_choice, output_prefix_copy)
+        
+        if data_term_choice2==1:
+            ## input is image data
+            H, RGB_Colors,Hull_vertices=choose_good_initial_H_from_existing_H(img, img.reshape((-1,3))/255.0, Existing_H, M, representative_color_choice, choose_corresponding_existing_KS_RGB_color_choice, output_prefix_copy)
+        
+
+        if data_term_choice2==2:
+            ### input is unique image data
+            image_unique_colors=np.array(list(set(list(tuple(item) for item in img.reshape((-1,3))))))
+            print image_unique_colors.shape
+            H, RGB_Colors,Hull_vertices=choose_good_initial_H_from_existing_H(img, image_unique_colors/255.0, Existing_H, M, representative_color_choice, choose_corresponding_existing_KS_RGB_color_choice, output_prefix_copy)
+
+
 
         print H.shape
+
+
 
 
         prefix = output_prefix+"-representative_color_for_input_img"
