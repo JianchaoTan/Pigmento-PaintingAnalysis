@@ -232,14 +232,14 @@ def save_layers(x0, arr, H, output_prefix):
 
 
 
-    normalized_Thickness=Thickness/Thickness.sum(axis=1).reshape((-1,1))
+    # normalized_Thickness=Thickness/Thickness.sum(axis=1).reshape((-1,1))
 
-    for i in xrange(M):
-        #### save normalized_weights_map for each pigment.
-        normalized_thickness_map_name=output_prefix+"-normalized_thickness_map-%02d.png" % i
-        normalized_thickness_map=normalized_Thickness[:,i].reshape(img_size).copy()
-        Image.fromarray((normalized_thickness_map*255.0).clip(0,255).round().astype(np.uint8)).save(normalized_thickness_map_name)
-        
+    # for i in xrange(M):
+    #     #### save normalized_weights_map for each pigment.
+    #     normalized_thickness_map_name=output_prefix+"-normalized_thickness_map-%02d.png" % i
+    #     normalized_thickness_map=normalized_Thickness[:,i].reshape(img_size).copy()
+    #     Image.fromarray((normalized_thickness_map*255.0).clip(0,255).round().astype(np.uint8)).save(normalized_thickness_map_name)
+    
 
     Thickness_sum_map=Thickness.sum(axis=1).reshape(img_size)
     T_min=Thickness_sum_map.min()
@@ -516,6 +516,25 @@ if __name__=="__main__":
             #### reorder the primary pigments
             H_ordered=H[order,:]
             H=H_ordered.copy()
+
+
+            ### save reordered primary pigments.
+            np.savetxt(os.path.splitext(KS_file_name)[0]+"-"+os.path.splitext(order_file_name)[0]+".txt", H)
+            R_vector=equations_in_RealPigments(H[:,:L], H[:,L:], r=1.0, h=1.0)
+            P_vector=R_vector*Illuminantnew[:,1].reshape((1,-1)) ### shape is N*L
+            R_xyz=(P_vector.reshape((-1,1,L))*R_xyzcoeff.reshape((1,3,L))).sum(axis=2)   ###shape N*3*L to shape N*3 
+            Normalize=(Illuminantnew[:,1]*R_xyzcoeff[1,:]).sum() ### scalar value.
+            R_xyz=R_xyz/Normalize ####xyz value shape is N*3
+            R_rgb=np.dot(xyztorgb,R_xyz.transpose()).transpose() ###linear rgb value, shape is N*3
+            R_rgb=Gamma_trans_img(R_rgb.clip(0,1)) ##clip and gamma correction
+            R_rgb=(R_rgb*255.0).round()
+            filename="primary_pigments_color-"+str(M)+"-"+os.path.splitext(order_file_name)[0]+".png"
+            Image.fromarray(R_rgb.reshape((1,-1,3)).astype(np.uint8)).save(filename)
+
+            with open("primary_pigments_color_vertex-"+str(M)+"-"+os.path.splitext(order_file_name)[0]+".js", 'w') as myfile:
+                json.dump({"vs": R_rgb.tolist()}, myfile )
+
+
 
 
         print 'smooth_choice: ',smooth_choice
