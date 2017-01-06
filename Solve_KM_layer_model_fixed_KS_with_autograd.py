@@ -417,7 +417,7 @@ if __name__=="__main__":
     x0=Thickness.reshape(-1)
 
 
-    kSaveEverySeconds = 10
+    kSaveEverySeconds = 50
     ## [ number of iterations, time of last save, arr.shape ]
     last_save = [ None, None, None ]
     def reset_saver( arr_shape ):
