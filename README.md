@@ -29,7 +29,7 @@
 #### Commands (run 1 first, then run 2 or 3): 
 
 ##### 1. Extract KM primary pigments: 
-User can give number of pigmetns, for example, "6" in the command line below.
+User can give number of pigments, for example, "6" in the command line below.
 ```sh
 	$ cd /new_pipeline_executable
 
@@ -49,7 +49,7 @@ You can use default parameter values in command line directly, only need change 
 
 
 ##### 3. Extract KM layers: 
-You need create a layer order file manually: "order1.txt" and put it in /wheatfield-crop folder, which can be order like: 0 1 2 3 4 5 or their permutations. Then you can run below command.
+You need create a layer order file manually: "order1.txt" and put it in /wheatfield-crop folder, since we are using 6 prigments, so "order1.txt" content can be like: 0 1 2 3 4 5 or their permutations. Then you can run below command.
 ```sh
 	$ cd /new_pipeline_executable/wheatfield-crop
 
