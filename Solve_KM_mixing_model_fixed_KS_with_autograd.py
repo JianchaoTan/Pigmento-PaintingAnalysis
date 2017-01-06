@@ -793,7 +793,7 @@ if __name__=="__main__":
 
 
 
-    kSaveEverySeconds = 10
+    kSaveEverySeconds = 50
     ## [ number of iterations, time of last save, arr.shape ]
     last_save = [ None, None, None ]
     def reset_saver( arr_shape ):
