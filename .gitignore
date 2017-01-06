@@ -1,7 +1,10 @@
+*.png
+*.txt
 *.jpg
 *.a
 *.o
 *.pyc
 *.jpeg
+*.js
 .DS_Store
 *~
