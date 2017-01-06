@@ -26,7 +26,7 @@
 
 
 
-#### Commands (run 1 first, then run 2 or 3): 
+#### Commands (run 1 first, then run 2 or 3, 4 is for comparison, 5 is for GUI): 
 
 ##### 1. Extract KM primary pigments: 
 User can give number of pigments, for example, "6" in the command line below.
