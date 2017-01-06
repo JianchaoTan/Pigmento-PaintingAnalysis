@@ -33,7 +33,7 @@ User can give number of pigments, for example, "6" in the command line below.
 ```sh
 	$ cd /new_pipeline_executable
 
-	$ python step1_ANLS_with_autograd.py wheatfield-crop.png Existing_KS_parameter_KS.txt 2 None wheatfield-sampled_pixels-400 0 6 10.0 0.0 0.0 0.001 0.001 1e-6 /wheatfield-crop None 0 1 10000 400 1 0
+	$ python step1_ANLS_with_autograd.py wheatfield-crop-steve.png Existing_KS_parameter_KS.txt 2 None wheatfield-crop-steve-sampled_pixels-400 0 6 10.0 0.0 0.0 0.001 0.001 1e-6 /wheatfield-crop None 0 1 10000 400 1 0
 ```
 
 
@@ -43,7 +43,7 @@ You can use default parameter values in command line directly, only need change 
 ```sh
 	$ cd /new_pipeline_executable/wheatfield-crop
 
-	$ python ../Solve_KM_mixing_model_fixed_KS_with_autograd.py wheatfield-crop.png  primary_pigments_KS-6.txt  None wheatfield-crop-primary_pigments_color_vertex-6-KM_weights-W_w_10.0-W_sparse_0.1-W_spatial_1.0-choice_0-blf-W_neighbors_0.0-Recursive_Yes 10.0 0.1 0 1.0 0.0 blf Yes
+	$ python ../Solve_KM_mixing_model_fixed_KS_with_autograd.py wheatfield-crop-steve.png  primary_pigments_KS-6.txt  None wheatfield-crop-steve-primary_pigments_color_vertex-6-KM_weights-W_w_10.0-W_sparse_0.1-W_spatial_1.0-choice_0-blf-W_neighbors_0.0-Recursive_Yes 10.0 0.1 0 1.0 0.0 blf Yes
 ```
 
 
@@ -53,7 +53,7 @@ You need create a layer order file manually: "order1.txt" and put it in /wheatfi
 ```sh
 	$ cd /new_pipeline_executable/wheatfield-crop
 
-	$ python ../Solve_KM_layer_model_fixed_KS_with_autograd.py wheatfield-crop.png  primary_pigments_KS-6.txt  None wheatfield-crop-primary_pigments_color_vertex-6-KM_layers-W_w_10.0-W_sparse_0.1-W_spatial_1.0-choice_0-blf-W_neighbors_0.0-Recursive_Yes-order1 10.0 0.1 0 1.0 0.0 blf Yes order1.txt
+	$ python ../Solve_KM_layer_model_fixed_KS_with_autograd.py wheatfield-crop-steve.png  primary_pigments_KS-6.txt  None wheatfield-crop-steve-primary_pigments_color_vertex-6-KM_layers-W_w_10.0-W_sparse_0.1-W_spatial_1.0-choice_0-blf-W_neighbors_0.0-Recursive_Yes-order1 10.0 0.1 0 1.0 0.0 blf Yes order1.txt
 ```
 
 
@@ -62,12 +62,12 @@ You need create a layer order file manually: "order1.txt" and put it in /wheatfi
 ```sh
 	$ cd /new_pipeline_executable
 
-	$ python fast_energy_RGB_lap_adjusted_weights.py  /wheatfield-crop wheatfield-crop.png order1.txt primary_pigments_color_vertex-6.js  --weights weights-poly3-opaque400-dynamic40000.js  --solve-smaller-factor 2 --save-every 50
+	$ python fast_energy_RGB_lap_adjusted_weights.py  /wheatfield-crop wheatfield-crop-steve.png order1.txt primary_pigments_color_vertex-6.js  --weights weights-poly3-opaque400-dynamic40000.js  --solve-smaller-factor 2 --save-every 50
 ```
 
 
 
-##### 5. GUI code 
+##### 5. GUI code. Above commands will generate a "Application_Files" folder in the "wheatfield-crop" folder, which will contain all needed files for GUI. 
 ```sh
 	$ cd /new_pipeline_executable
 
