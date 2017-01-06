@@ -29,7 +29,6 @@ Gamma_trans_img=Gamma_trans_img3
 
 
 
-
 @jit 
 def objective_func_vector_fixed_KS(x0, arr, H, Smooth_Matrix, W_w=2.0, W_sparse=0.01,W_spatial=0.0,W_neighbors=0.0, neighbors=None):
     
@@ -457,6 +456,11 @@ def save_pigments(x_H, M, output_dir):
     x_H=x_H.reshape((M,-1))
 
     np.savetxt(output_dir+"primary_pigments_KS-"+str(M)+".txt", x_H)
+    
+    #### save for application
+    np.savetxt(save_for_application_path_prefix+os.path.splitext(img_file)[0]+"-"+str(M)+"-primary_pigments_KS.txt", x_H)
+
+
 
     K0=x_H[:,:L]
     S0=x_H[:,L:]
@@ -476,13 +480,26 @@ def save_pigments(x_H, M, output_dir):
     pigments=np.ones((w,h*M,C))
     for i in xrange(M):
         pigments[:,i*h:i*h+h]=R_rgb[i]
+
     plt.imsave(output_dir+"primary_pigments_color-"+str(M)+".png", (pigments*255.0).round().astype(np.uint8))
+
+    #### save for applications
+    plt.imsave(save_for_application_path_prefix+os.path.splitext(img_file)[0]+"-"+str(M)+"-primary_pigments_RGB_color.png", (pigments*255.0).round().astype(np.uint8))
+
+
 
     # from scipy.spatial import ConvexHull
     # hull=ConvexHull(R_rgb*255.0)
     # faces=hull.points[hull.simplices]
     with open(output_dir+"primary_pigments_color_vertex-"+str(M)+".js", "w") as fd:
         json.dump({'vs': (R_rgb*255.0).tolist()}, fd)
+    
+
+    #### save for applications
+    with open(save_for_application_path_prefix+os.path.splitext(img_file)[0]+"-"+str(M)+"-primary_pigments_RGB_color.js", "w") as fd:
+        json.dump({'vs': (R_rgb*255.0).tolist()}, fd)
+
+    
 
   
     xaxis=np.arange(L)
@@ -1440,7 +1457,7 @@ def sample_RGBcolors_new_use_avg_color_in_each_bin(RGB_colors, bin_num=16):
 
 if __name__=="__main__":
     import sys, os
-
+    global img_file
     img_file=sys.argv[1]
 
     KS_file_name=sys.argv[2]
@@ -1469,7 +1486,6 @@ if __name__=="__main__":
 
 
 
-
     # W_sm_K, W_sm_S, W_sm_KS=np.array([0.005,0.05,1e-6])
     # # W_sm_K, W_sm_S, W_sm_KS=np.array([100.0,100.0,1.0])
     # # W_sm_K, W_sm_S, W_sm_KS=np.array([0.0,0.0,0.0])
@@ -1486,15 +1502,26 @@ if __name__=="__main__":
     
     # base_dir="/Users/jianchao/Documents/Research/Adobe_Jianchao/Brushstroke_Project/Adobe_inside/CODE/pigment-parameters-newVersion/new_pipeline_executable"
     base_dir = os.path.split( os.path.realpath(__file__) )[0]
-    # print base_dir
-    
     base_dir=base_dir+foldername+"/"
+    print base_dir
     output_prefix_copy=base_dir+output_prefix
     make_sure_path_exists(output_prefix_copy)
     output_prefix=output_prefix_copy+"/ANLS"
-    
+
+
+
+    ##### save for Application:
+    global save_for_application_path_prefix
+    save_for_application_path_prefix="."+foldername+"/Application_Files/"
+
+    make_sure_path_exists("."+foldername+"/Application_Files")
+
+
     img=np.asarray(Image.open(base_dir+img_file).convert('RGB'))
     print img.shape
+
+    ###save for application folder:
+    Image.fromarray(img).save(save_for_application_path_prefix+img_file)
 
 
 
@@ -1514,7 +1541,7 @@ if __name__=="__main__":
     # arr=arr.reshape((np.int(sqrt(sample_num)),np.int(sqrt(sample_num)),3))
     arr=arr.reshape((-1,1,3))
 
-    Image.fromarray(arr).save(base_dir+"/sampled_pixels-"+str(sample_num)+".png")
+    Image.fromarray(arr).save(base_dir+"sampled_pixels-"+str(sample_num)+".png")
     arr=arr/255.0
 
     L=len(cie1931new)
@@ -1536,7 +1563,22 @@ if __name__=="__main__":
         print H.shape
 
     elif KS_choice==2 and KS_file_name!="None":
+
         Existing_H=np.loadtxt(base_dir+KS_file_name)
+        
+        ###save for application folder:
+        np.savetxt(save_for_application_path_prefix+KS_file_name, Existing_H)
+        with open(base_dir+"Existing_KS_parameter_RGB_color.js") as myfile:
+            Existing_vertices=json.load(myfile)['vs']
+        with open(save_for_application_path_prefix+"Existing_KS_parameter_RGB_color.js", "w") as myfile:
+            json.dump({"vs": Existing_vertices},myfile)
+
+        Existing_palette_color=Image.open(base_dir+"Existing_KS_parameter_RGB_color.png").convert('RGB')
+        Existing_palette_color.save(save_for_application_path_prefix+"Existing_KS_parameter_RGB_color.png")
+        
+
+
+
         
         if data_term_choice2==0:
 
@@ -1597,7 +1639,7 @@ if __name__=="__main__":
                 W_js = json.load(data_file)
             W=np.array(W_js['weights'])
         if extention==".txt":
-            W=np.loadtxt(base_dir+"/"+Weights_file_name)
+            W=np.loadtxt(base_dir+Weights_file_name)
             W=W.reshape((arr.shape[0],arr.shape[1],M))
 
 
@@ -1623,7 +1665,7 @@ if __name__=="__main__":
         
         print recover_H.shape
         save_pigments(recover_H.reshape(-1), M, output_prefix+"-Pigments"+"-alternate_loop-"+str(final_loop)+"-")
-        save_pigments(recover_H.reshape(-1), M, base_dir+"/")
+        save_pigments(recover_H.reshape(-1), M, base_dir)
         save_results(recover_W.reshape(-1), arr, recover_H, output_prefix+"-Weights"+"-alternate_loop-"+str(final_loop)+"-")
 
         #### measure groundtruth and recovered H. 
