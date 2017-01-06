@@ -9,7 +9,7 @@ from Grabcut_app_tkinter import *
 from Copy_Paste_Insert_Delete_app_tkinter import *
 from Recoloring_app_tkinter import *
 from Local_Alpha_Matting_app_tkinter import *
-
+from Thickness_Scattering_Weights_modification_app_tkinter import *
 
 
 
@@ -44,6 +44,9 @@ class Main_app:
         filemenu.add_command(label="Recoloring", command=self.Recoloring)
 
         filemenu.add_separator()
+        filemenu.add_command(label="Thickness, Scattering and Weights modification", command=self.Thickness_Scattering_Weights_modification)
+
+        filemenu.add_separator()
         filemenu.add_command(label="Local_Alpha_Matting", command=self.Local_Alpha_Matting)
 
         filemenu.add_separator()
@@ -62,6 +65,7 @@ class Main_app:
 
 
         self.mask=None
+        self.control=0
 
 
 
@@ -72,12 +76,17 @@ class Main_app:
         if option==0:
             self.canvas = tk.Canvas(self.master, width=width, height=height, cursor="cross")
             self.canvas.pack(side="top", fill="both", expand=True)
+        else:
+            self.canvas.config(width=width, height=height)
+            self.canvas.pack(side="top", fill="both", expand=True)
+
         self.tk_im = ImageTk.PhotoImage(img)
         self.canvas.create_image(0,0,anchor="nw",image=self.tk_im)
 
 
     def Reset(self):
         self.Show_image(self.im, option=1)
+        self.control=0
 
     def About(self):
         print "####"
@@ -106,7 +115,10 @@ class Main_app:
         self.img2=np.asarray(self.im)
 
         self.msg.pack_forget() ###remove message box and show image.
-        self.Show_image(self.im, option=0)
+        
+        
+        self.Show_image(self.im, option=self.control)
+        self.control=1
 
         self.path_prefix=os.path.splitext(self.name)[0]
         
@@ -248,12 +260,14 @@ class Main_app:
 
     def Recoloring(self): ### can local or global
         recoloring_app=Recoloring_app(self)
-
+    
+    def Thickness_Scattering_Weights_modification(self):
+        thickness_scattering_weights_modification_app=Thickness_Scattering_Weights_modification_app(self)
 
     def Local_Alpha_Matting(self):
         local_alpha_matte_app=Local_Alpha_Matting_app(self)
 
-
+  
     def OpenFile_version2(self): ### open a unprocessed image only, for extracting palette from given image
         # import step1_ANLS_with_autograd
         ### only parameter is pignum (4-7) and other parameters are fixed for GUI.
