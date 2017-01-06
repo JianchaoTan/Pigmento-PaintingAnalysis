@@ -220,6 +220,13 @@ def save_layers(x0, arr, H, output_prefix):
     plt.imsave(filename,(R_rgb.reshape(original_shape)*255.0).clip(0,255).round().astype(np.uint8))
     np.savetxt(output_prefix+"-thickness.txt", Thickness)
 
+    
+    #### save for applications
+    filename=save_for_application_path_prefix+os.path.splitext(img_file)[0]+"-"+str(M)+"-KM_layers-"+os.path.splitext(order_file_name)[0]+"-reconstructed.png"
+    plt.imsave(filename,(R_rgb.reshape(original_shape)*255.0).clip(0,255).round().astype(np.uint8))
+
+
+
 
     ### compute sparsity
     sparsity_thres_array=np.array([0.000001, 0.00001, 0.0001,0.001,0.01,0.1])
@@ -247,7 +254,7 @@ def save_layers(x0, arr, H, output_prefix):
     Thickness_sum_map=Thickness_sum_map/T_max
 
     Image.fromarray((Thickness_sum_map*255.0).round().astype(np.uint8)).save(output_prefix+"-thickness_sum_map-min-"+str(T_min)+"-max-"+str(T_max)+".png")
-        
+    
 
     for i in xrange(M):
         thickness_map_name=output_prefix+"-layer_thickness_map-%02d.png" % i
@@ -256,8 +263,12 @@ def save_layers(x0, arr, H, output_prefix):
         if Large_than_one>0:
             print "Number of Thickness value that is larger than 1.0 is : ", Large_than_one
         Image.fromarray((Thickness_map*255.0).clip(0,255).round().astype(np.uint8)).save(thickness_map_name)
+        
+        ####save for application
+        thickness_map_name=save_for_application_path_prefix+os.path.splitext(img_file)[0]+"-"+str(M)+"-KM_layers-"+os.path.splitext(order_file_name)[0]+"-thickness_map-%02d.png" % i
+        Image.fromarray((Thickness_map*255.0).clip(0,255).round().astype(np.uint8)).save(thickness_map_name)
 
-
+ 
 
 def save_layers_2(x0, arr_shape, H, output_prefix):
     shape=arr_shape
@@ -348,7 +359,7 @@ def create_cross_bilateral(arr, M):
 
 
 if __name__=="__main__":
-
+    global img_file
     img_file=sys.argv[1]
     KS_file_name=sys.argv[2]
     Thickness_file_name=sys.argv[3]
@@ -359,6 +370,12 @@ if __name__=="__main__":
     solve_choice=np.int(sys.argv[7])
     W_spatial=np.float(sys.argv[8])
     print 'W_spatial',W_spatial
+
+
+    global save_for_application_path_prefix
+    save_for_application_path_prefix="./Application_Files/"
+
+    make_sure_path_exists("."+foldername+"/Application_Files")
 
 
     W_neighbors=0.0
@@ -506,6 +523,8 @@ if __name__=="__main__":
         
         smooth_choice=sys.argv[10]
         recursive_choice=sys.argv[11]
+
+        global order_file_name
         order_file_name=sys.argv[12]
         
         if order_file_name!=None:
@@ -513,6 +532,10 @@ if __name__=="__main__":
             order=order.astype(np.uint8)
             print 'order', order
             
+            ### save for application
+            np.savetxt(save_for_application_path_prefix+order_file_name, order)
+
+
             #### reorder the primary pigments
             H_ordered=H[order,:]
             H=H_ordered.copy()
