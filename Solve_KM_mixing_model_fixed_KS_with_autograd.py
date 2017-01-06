@@ -714,8 +714,6 @@ if __name__=="__main__":
     global save_for_application_path_prefix
     save_for_application_path_prefix="./Application_Files/"
 
-    make_sure_path_exists("."+foldername+"/Application_Files")
-
 
     W_neighbors=0.0
     if solve_choice==3 or solve_choice==6 : #### solve per pixel with neighborhood info constraints
