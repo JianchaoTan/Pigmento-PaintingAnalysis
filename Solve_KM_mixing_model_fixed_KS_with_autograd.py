@@ -426,6 +426,11 @@ def save_results(x0, arr, H, output_prefix):
     np.savetxt(output_prefix+"-mixing_weights.txt", Weights)
 
 
+    #### save for applications
+    filename=save_for_application_path_prefix+os.path.splitext(img_file)[0]+"-"+str(M)+"-KM_mixing-reconstructed.png"
+    plt.imsave(filename,(R_rgb.reshape(original_shape)*255.0).clip(0,255).round().astype(np.uint8))
+
+
     ### compute sparsity
     sparsity_thres_array=np.array([0.000001, 0.00001, 0.0001,0.001,0.01,0.1])
     Weights_sparsity_list=np.ones(len(sparsity_thres_array))
@@ -460,6 +465,15 @@ def save_results(x0, arr, H, output_prefix):
         weights_map_name=output_prefix+"-mixing_weights_map-%02d.png" % i
         Weights_map=Weights[:,i].reshape(img_size).copy()
         Image.fromarray((Weights_map*255.0).clip(0,255).round().astype(np.uint8)).save(weights_map_name)
+        
+        #### save for applications
+        weights_map_name=save_for_application_path_prefix+os.path.splitext(img_file)[0]+"-"+str(M)+"-KM_mixing-weights_map-%02d.png" % i
+        Image.fromarray((Weights_map*255.0).clip(0,255).round().astype(np.uint8)).save(weights_map_name)
+
+
+
+
+
 
 
         # #### use weights as thickness, to show each pigments on white background.
@@ -686,7 +700,7 @@ def create_cross_bilateral(arr, M):
 
 
 if __name__=="__main__":
-
+    global img_file
     img_file=sys.argv[1]
     KS_file_name=sys.argv[2]
     Weights_file_name=sys.argv[3]
@@ -696,6 +710,11 @@ if __name__=="__main__":
     solve_choice=np.int(sys.argv[7])
     W_spatial=np.float(sys.argv[8])
     print 'W_spatial',W_spatial
+
+    global save_for_application_path_prefix
+    save_for_application_path_prefix="./Application_Files/"
+
+    make_sure_path_exists("."+foldername+"/Application_Files")
 
 
     W_neighbors=0.0
