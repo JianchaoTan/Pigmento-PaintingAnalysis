@@ -17,6 +17,7 @@ fi
 
 dir="`basename ${input%.*}`-$pigments"
 image="`basename ${input%.*}.png`"
+imagebase="`basename ${input%.*}`"
 log="log.txt"
 html="index.html"
 
@@ -28,9 +29,15 @@ fi
 
 mkdir -p $dir
 cp wheatfield-crop/Existing* $dir
+cp wheatfield-crop/weights-* $dir
 convert $input -resize 600x600 $dir/$image
 rm -f $dir/$log
 rm -f $dir/$html
+
+COUNT=$(expr $pigments - 1)
+for i in $(seq 0 $COUNT); do 
+	echo $i >> $dir/order1.txt;
+done
 
 python \
 	step1_ANLS_with_autograd.py \
@@ -38,7 +45,7 @@ python \
 	Existing_KS_parameter_KS.txt \
 	2 \
 	None \
-	sampled_pixels-400 \
+	$imagebase-sampled_pixels-400 \
 	0 \
 	$pigments \
 	10.0 \
@@ -51,8 +58,19 @@ python \
 	None \
 	0 \
 	1 \
-	1000 \
-	400 2>&1 | tee -a $dir/$log
+	10000 \
+	400 \
+	1 \
+	0 2>&1 | tee -a $dir/$log
+
+python \
+	fast_energy_RGB_lap_adjusted_weights.py \
+	 /$dir \
+	 $image \
+	 order1.txt \
+	 primary_pigments_color_vertex-${pigments}.js \
+	 --weights weights-poly3-opaque400-dynamic40000.js \
+	 --solve-smaller-factor 2 --save-every 50 2>&1 | tee -a $dir/$log
 
 cd $dir
 
@@ -61,7 +79,7 @@ python \
 	$image \
 	primary_pigments_KS-${pigments}.txt  \
 	None \
-	$prefix \
+	$imagebase-$prefix \
 	10.0 \
 	0.1 \
 	0 \
@@ -69,6 +87,22 @@ python \
 	0.0 \
 	blf \
 	Yes 2>&1 | tee -a $log
+
+python \
+	../Solve_KM_layer_model_fixed_KS_with_autograd.py \
+	$image \
+	primary_pigments_KS-${pigments}.txt  \
+	None \
+	$imagebase-$prefix-order1 \
+	10.0 \
+	0.1 \
+	0 \
+	1.0 \
+	0.0 \
+	blf \
+	Yes \
+	order1.txt 2>&1 | tee -a $log
+
 
 cat <<EOF >>$html
 <html>
