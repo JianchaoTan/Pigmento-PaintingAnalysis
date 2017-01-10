@@ -21,7 +21,7 @@ imagebase="`basename ${input%.*}`"
 log="log.txt"
 html="index.html"
 
-prefix="primary_pigments_color_vertex-${pigments}-KM_weights-W_w_10.0-W_sparse_0.1-W_spatial_1.0-choice_0-blf-W_neighbors_0.0-Recursive_Yes"
+prefix="${imagebase}-primary_pigments_color_vertex-${pigments}-KM_weights-W_w_10.0-W_sparse_0.1-W_spatial_1.0-choice_0-blf-W_neighbors_0.0-Recursive_Yes"
 
 if [[ -d $dir ]]; then
 	exit 1
@@ -79,7 +79,7 @@ python \
 	$image \
 	primary_pigments_KS-${pigments}.txt  \
 	None \
-	$imagebase-$prefix \
+	$prefix \
 	10.0 \
 	0.1 \
 	0 \
@@ -93,7 +93,7 @@ python \
 	$image \
 	primary_pigments_KS-${pigments}.txt  \
 	None \
-	$imagebase-$prefix-order1 \
+	$prefix-order1 \
 	10.0 \
 	0.1 \
 	0 \
