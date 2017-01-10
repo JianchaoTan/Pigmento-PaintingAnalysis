@@ -11,6 +11,7 @@ if [[ -z $indir ]]; then
 fi
 
 mkdir -p webpage
+mkdir -p applications
 mkdir -p output
 
 html="webpage/index.html"
@@ -43,6 +44,7 @@ for p in 5 4 6; do
 EOF
 
 		mkdir webpage/$dir
+		mkdir -p applications/$dir
 		cp $dir/$input \
 			$dir/index.html \
 			$dir/log.txt \
@@ -51,6 +53,7 @@ EOF
 			$dir/*-final_recursivelevel--fixed_KS-reconstructed.png \
 			$dir/*-final_recursivelevel--mixing_weights_map-*.png \
 			webpage/$dir
+		cp -r $dir/Application_Files applications/$dir
 		mv $dir output/
 	done
 done
