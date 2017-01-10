@@ -244,8 +244,8 @@ class Grabcut_app:
         else:
             N=M/3
         
-        print self.data_imgs.shape
-        print self.mask.shape
+        # print self.data_imgs.shape
+        # print self.mask.shape
         self.mask_copy=self.mask.copy()
         self.masklist = np.zeros((row,col,N), dtype=np.uint8)
         self.masklist[:,:,:]=self.mask_copy.reshape((self.mask_copy.shape[0],self.mask_copy.shape[1],1))
@@ -306,8 +306,8 @@ class Grabcut_app:
             
             self.data_imgs=self.data_imgs_copy[:,:,np.nonzero(self.user_select_indices)[0]].reshape((self.data_imgs_copy.shape[0], self.data_imgs_copy.shape[1], -1))
             
-            print self.user_select_indices
-            print self.data_imgs.shape
+            # print self.user_select_indices
+            # print self.data_imgs.shape
 
             row,col,M=self.data_imgs.shape
             # print self.rect_or_mask

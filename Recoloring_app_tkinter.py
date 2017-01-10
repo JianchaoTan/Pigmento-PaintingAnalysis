@@ -42,7 +42,7 @@ def KM_mixing_rendering_global(img, Weights, KS, normalize_flag=1):
 
     if normalize_flag==0:
     	thickness=Weights.sum(axis=1).reshape((-1,1))
-    	print thickness.max()
+    	# print thickness.max()
     else:
     	thickness=1.0
 
@@ -591,10 +591,10 @@ class Recoloring_app:
 		elif self.var_change_weights.get()==1: ### recoloring by changing weights.
 
 			new_scale=2**(self.weights_scales.get()-5)
-			print new_scale
+			# print new_scale
 			user_chosed_ind_list=np.nonzero(self.user_select_indices)[0]
-			print user_chosed_ind_list
-			print self.normalize_flag.get()
+			# print user_chosed_ind_list
+			# print self.normalize_flag.get()
 
 			self.KM_weights.reshape((-1,self.PigNum))[:,user_chosed_ind_list]=self.AllData.KM_weights.reshape((-1,self.PigNum))[:,user_chosed_ind_list]*new_scale
 
@@ -627,9 +627,9 @@ class Recoloring_app:
 			new_scale=2**(self.scatter_scales.get()-10)
 
 			user_chosed_ind_list=np.nonzero(self.user_select_indices)[0]
-			print self.user_select_indices
-			print new_scale
-			print user_chosed_ind_list
+			# print self.user_select_indices
+			# print new_scale
+			# print user_chosed_ind_list
 
 			self.Extracted_KS[user_chosed_ind_list,L:]=self.AllData.KM_pigments[user_chosed_ind_list,L:]*new_scale
 
