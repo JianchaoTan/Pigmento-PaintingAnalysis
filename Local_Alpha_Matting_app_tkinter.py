@@ -28,7 +28,6 @@ class Local_Alpha_Matting_app:
         self.rect = None
         self.start_x = None
         self.start_y = None
-        self.thickness=8
         self.showing=0
         self.solve_flag=1
         self.data=controller.AllData.KM_weights #### our data here is using weights, not thickness
@@ -42,6 +41,7 @@ class Local_Alpha_Matting_app:
 
         
         self.newWindow=tk.Toplevel(self.master)
+        self.newWindow.geometry("300x300")
         self.shift(self.newWindow, position='right_top', scale=1.1)
 
         self.newWindow.title("Alpha Matting Window")
@@ -54,6 +54,11 @@ class Local_Alpha_Matting_app:
         self.var2 = IntVar()
         Checkbutton(self.newWindow, text="background", variable=self.var2, command=self.update_txt2).grid(row=2, sticky=W)
         
+        self.thickness=IntVar()
+        Label(self.newWindow, text="Scribble_size").grid(row=3,sticky=W, pady=10)
+        self.thickness=Scale(self.newWindow, from_=2, to=10, orient=HORIZONTAL)
+        self.thickness.grid(row=3, sticky=W, padx=100, pady=10)
+        self.thickness.set(5)
 
         Button(self.newWindow, text='Execute', command=self.Execute).grid(row=4, sticky=W, pady=4)
         
@@ -93,7 +98,6 @@ class Local_Alpha_Matting_app:
         self.start_x = None
         self.start_y = None
         self.rectangle=(0,0,1,1)
-        self.thickness=8
         self.showing=0
         self.solve_flag=1
 
@@ -260,13 +264,13 @@ class Local_Alpha_Matting_app:
 
         elif self.var1.get()==1:####foreground
 
-            cv2.circle(self.mask,(curX,curY),self.thickness,1,-1)
-            self.canvas.create_oval(curX-self.thickness, curY-self.thickness, curX+self.thickness, curY+self.thickness, outline="white", fill = "white" )
+            cv2.circle(self.mask,(curX,curY),self.thickness.get(),1,-1)
+            self.canvas.create_oval(curX-self.thickness.get(), curY-self.thickness.get(), curX+self.thickness.get(), curY+self.thickness.get(), outline="white", fill = "white" )
 
         elif self.var2.get()==1:#### background
 
-            cv2.circle(self.mask,(curX,curY),self.thickness,0,-1)
-            self.canvas.create_oval(curX-self.thickness, curY-self.thickness, curX+self.thickness, curY+self.thickness, outline="black", fill = "black" )
+            cv2.circle(self.mask,(curX,curY),self.thickness.get(),0,-1)
+            self.canvas.create_oval(curX-self.thickness.get(), curY-self.thickness.get(), curX+self.thickness.get(), curY+self.thickness.get(), outline="black", fill = "black" )
         
 
 

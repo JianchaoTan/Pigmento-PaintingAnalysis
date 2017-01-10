@@ -189,7 +189,7 @@ def object_insertion_KS(img_pigment_KS, img_thickness, imsize, img_weights, chos
 
 
 
-def object_paste_RGB(img_pigment_RGB, img_weights, imsize, chosed_indices, mask, central_position_x, central_position_y, normalize_flag):
+def object_paste_RGB(img_pigment_RGB, img_weights, imsize, chosed_indices, mask, central_position_x, central_position_y, normalize_flag, scales):
     
     M=len(img_pigment_RGB)
     img_weights=img_weights.reshape((-1,M))
@@ -252,7 +252,7 @@ def object_paste_RGB(img_pigment_RGB, img_weights, imsize, chosed_indices, mask,
 
 
     ### change masked area
-    new_weights=img_weights[final_nonzeros_inds1,:].reshape((-1,M))+final_obj_weights
+    new_weights=img_weights[final_nonzeros_inds1,:].reshape((-1,M))+final_obj_weights * scales
 
 
     if normalize_flag==1:
@@ -273,7 +273,7 @@ def object_paste_RGB(img_pigment_RGB, img_weights, imsize, chosed_indices, mask,
 
 
 
-def object_paste_KS(img_pigment_KS, img_weights, imsize, chosed_indices, mask, central_position_x, central_position_y, normalize_flag):
+def object_paste_KS(img_pigment_KS, img_weights, imsize, chosed_indices, mask, central_position_x, central_position_y, normalize_flag, scales):
    
     M=len(img_pigment_KS)
     img_weights=img_weights.reshape((-1,M))
@@ -343,7 +343,7 @@ def object_paste_KS(img_pigment_KS, img_weights, imsize, chosed_indices, mask, c
 
 
     ### change masked area
-    new_weights=img_weights[final_nonzeros_inds1,:].reshape((-1,M))+final_obj_weights
+    new_weights=img_weights[final_nonzeros_inds1,:].reshape((-1,M))+final_obj_weights * scales
 
     if normalize_flag==1:
         new_weights_sum=new_weights.sum(axis=1).reshape((-1,1))
@@ -492,7 +492,7 @@ class Copy_Paste_Insert_Delete_app:
         self.canvas=controller.canvas
         self.mask=controller.mask
 
-        if self.mask==None:
+        if self.mask is None:
             print "no input mask"
         else:
             print self.mask.shape
@@ -519,13 +519,12 @@ class Copy_Paste_Insert_Delete_app:
         self.newWindow=tk.Toplevel(self.master)
 
         self.newWindow.title("Copy_Paste_Insert_Delete Window")
-        self.newWindow.geometry("700x400")
+        self.newWindow.geometry("700x500")
         self.shift(self.newWindow)
 
         self.var3 = IntVar()
         Checkbutton(self.newWindow, text="Use PD version (default is KM version)", variable=self.var3, command=self.update_status).grid(row=0, sticky=W, pady=15)
         
-
 
         
         self.PigNum=self.AllData.KM_pigments.shape[0]
@@ -548,10 +547,10 @@ class Copy_Paste_Insert_Delete_app:
 
 
         self.var0_0 = IntVar()
-        # Checkbutton(self.newWindow, text="CopyPaste (CAF-based)", variable=self.var0_0, command=self.update_txt0_0).grid(row=3, sticky=W, pady=10)
+        Checkbutton(self.newWindow, text="CopyPaste (CAF-based)", variable=self.var0_0, command=self.update_txt0_0).grid(row=3, sticky=W, pady=10)
         
         self.var0_1 = IntVar()
-        # Checkbutton(self.newWindow, text="Delete (CAF-based)", variable=self.var0_1, command=self.update_txt0_1).grid(row=3, sticky=W, padx=200, pady=10)
+        Checkbutton(self.newWindow, text="Delete (CAF-based)", variable=self.var0_1, command=self.update_txt0_1).grid(row=3, sticky=W, padx=200, pady=10)
         
         self.var1_0 = IntVar()
         Checkbutton(self.newWindow, text="CopyPaste (Select-based)", variable=self.var1_0, command=self.update_txt1_0).grid(row=4, sticky=W, pady=10)
@@ -559,41 +558,50 @@ class Copy_Paste_Insert_Delete_app:
         self.var1_1 = IntVar()
         Checkbutton(self.newWindow, text="Delete (Select-based)", variable=self.var1_1, command=self.update_txt1_1).grid(row=4, sticky=W, padx=200, pady=10)
         
-        self.normalize_flag = IntVar()
-        Checkbutton(self.newWindow, text="Normalize", variable=self.normalize_flag).grid(row=4, sticky=W, padx=400, pady=10)
-
         self.var2 = IntVar()
-        Checkbutton(self.newWindow, text="Object Insertion ", variable=self.var2, command=self.update_txt2).grid(row=5, sticky=W, pady=5)
+        Checkbutton(self.newWindow, text="Object Insertion ", variable=self.var2, command=self.update_txt2).grid(row=5, sticky=W, pady=10)
         
+        self.normalize_flag = IntVar()
+        Checkbutton(self.newWindow, text="Normalize", variable=self.normalize_flag).grid(row=5, sticky=W, padx=200, pady=10)
+
+
+        self.obj_weights_scales=IntVar()
+        Label(self.newWindow, text="Obj_weights_scale").grid(row=6,sticky=W, rowspan=2, pady=10)
+        self.obj_weights_scales=Scale(self.newWindow, from_=1, to=100, orient=HORIZONTAL)
+        self.obj_weights_scales.grid(row=6, sticky=W, padx=180, rowspan=2)
+        self.obj_weights_scales.set(50)
+
+
 
         self.obj_thickness=IntVar()
-        Label(self.newWindow, text="Object_thickness").grid(row=6,sticky=W, rowspan=2, pady=10)
-        self.obj_thickness=Scale(self.newWindow, from_=1, to=40, orient=HORIZONTAL)
-        self.obj_thickness.grid(row=6, sticky=W, padx=180, rowspan=2)
+        Label(self.newWindow, text="Object_thickness").grid(row=8,sticky=W, rowspan=2, pady=10)
+        self.obj_thickness=Scale(self.newWindow, from_=1, to=100, orient=HORIZONTAL)
+        self.obj_thickness.grid(row=8, sticky=W, padx=180, rowspan=2)
         self.obj_thickness.set(10)
         
         self.obj_opacity=IntVar()
-        Label(self.newWindow, text="Object_opacity").grid(row=9,sticky=W, rowspan=2, pady=10)
+        Label(self.newWindow, text="Object_opacity").grid(row=11,sticky=W, rowspan=2, pady=10)
         self.obj_opacity=Scale(self.newWindow, from_=1, to=10, orient=HORIZONTAL)
-        self.obj_opacity.grid(row=9, sticky=W, padx=180, rowspan=2)
+        self.obj_opacity.grid(row=11, sticky=W, padx=180, rowspan=2)
         self.obj_opacity.set(10)
         
         self.insert_onto_layer_index=IntVar()
-        Label(self.newWindow, text="Insert_onto_layer_index").grid(row=11,sticky=W, rowspan=2, pady=10)
+        Label(self.newWindow, text="Insert_onto_layer_index").grid(row=14,sticky=W, rowspan=2, pady=10)
         self.insert_onto_layer_index=Scale(self.newWindow, from_=0, to=self.PigNum-1, orient=HORIZONTAL)
-        self.insert_onto_layer_index.grid(row=11, sticky=W, padx=180, rowspan=2)
+        self.insert_onto_layer_index.grid(row=14, sticky=W, padx=180, rowspan=2)
         self.insert_onto_layer_index.set(self.PigNum-1)
 
+
         
 
 
-        Button(self.newWindow, text='Execute', command=self.Execute).grid(row=14, sticky=W, pady=15)
+        Button(self.newWindow, text='Execute', command=self.Execute).grid(row=17, sticky=W, pady=15)
         
-        Button(self.newWindow, text='Reset', command=self.Reset).grid(row=14, sticky=W, padx=120, pady=15)
+        Button(self.newWindow, text='Reset', command=self.Reset).grid(row=17, sticky=W, padx=120, pady=15)
 
-        Button(self.newWindow, text='Save', command=self.save_as).grid(row=14, sticky=W, padx=240, pady=15)
+        Button(self.newWindow, text='Save', command=self.save_as).grid(row=17, sticky=W, padx=240, pady=15)
 
-        Button(self.newWindow, text='Quit', command=self.Quit).grid(row=14, sticky=W, padx=360, pady=15)
+        Button(self.newWindow, text='Quit', command=self.Quit).grid(row=17, sticky=W, padx=360, pady=15)
     
     
     def update_txt0_0(self):
@@ -637,8 +645,9 @@ class Copy_Paste_Insert_Delete_app:
 
 
     def update_status(self):
-        if self.var3.get()==1:
-            self.normalize_flag.set(1) ### PD version need normalize.
+        pass
+        # if self.var3.get()==1:
+        #     self.normalize_flag.set(1) ### PD version need normalize.
     
     def update_status2(self):
 
@@ -683,8 +692,9 @@ class Copy_Paste_Insert_Delete_app:
             self.var_list["p-"+str(i)].set(0)
 
         self.showing=0
-
-        self.new_master.destroy() ##close results window
+        
+        if self.new_master is not None:
+            self.new_master.destroy() ##close results window
 
 
 
@@ -753,7 +763,9 @@ class Copy_Paste_Insert_Delete_app:
                                      self.mask, 
                                      self.dst_y, 
                                      self.dst_x,
-                                     self.normalize_flag.get())
+                                     self.normalize_flag.get(),
+                                     self.obj_weights_scales.get()/10.0
+                                     )
 
             ### delete (select-based)
             if self.var1_1.get()==1:
@@ -763,7 +775,8 @@ class Copy_Paste_Insert_Delete_app:
                                          imsize, 
                                          self.mask,
                                          chosed_indices,
-                                         self.normalize_flag.get())
+                                         self.normalize_flag.get()
+                                         )
                 
 
  
@@ -797,7 +810,9 @@ class Copy_Paste_Insert_Delete_app:
                                      self.mask, 
                                      self.dst_y, 
                                      self.dst_x,
-                                     self.normalize_flag.get())
+                                     self.normalize_flag.get(),
+                                     self.obj_weights_scales.get()/10.0
+                                     )
 
 
             ### delete (select-based)
@@ -807,7 +822,8 @@ class Copy_Paste_Insert_Delete_app:
                                          imsize, 
                                          self.mask,
                                          chosed_indices,
-                                         self.normalize_flag.get())
+                                         self.normalize_flag.get()
+                                         )
 
         
         self.Show_results(output)

@@ -28,7 +28,6 @@ class Grabcut_app:
         self.start_x = 0
         self.start_y = 0
         self.rect_or_mask=0
-        self.thickness=5
         self.showing=0
 
         self.data=controller.AllData.KM_weights ##### our data here is using weights, not thickness.
@@ -53,6 +52,7 @@ class Grabcut_app:
 
         
         self.newWindow=tk.Toplevel(self.master)
+        self.newWindow.geometry("300x300")
         self.shift(self.newWindow, position='right_top', scale=1.1)
 
         self.newWindow.title("Grabcut Window")
@@ -65,6 +65,11 @@ class Grabcut_app:
         self.var2 = IntVar()
         Checkbutton(self.newWindow, text="background", variable=self.var2, command=self.update_txt2).grid(row=2, sticky=W)
         
+        self.thickness=IntVar()
+        Label(self.newWindow, text="Scribble_size").grid(row=3,sticky=W, pady=10)
+        self.thickness=Scale(self.newWindow, from_=2, to=10, orient=HORIZONTAL)
+        self.thickness.grid(row=3, sticky=W, padx=100, pady=10)
+        self.thickness.set(5)
 
         Button(self.newWindow, text='Execute (Can press multi times)', command=self.Execute).grid(row=4, sticky=W, pady=4)
         
@@ -102,7 +107,6 @@ class Grabcut_app:
         self.start_y = 0
         self.rect_or_mask=0
         self.rectangle=(0,0,1,1)
-        self.thickness=5
         self.showing=0
 
         self.var1.set(0)
@@ -269,25 +273,25 @@ class Grabcut_app:
 
         elif self.var1.get()==1:####foreground
 
-            cv2.circle(self.mask,(curX,curY),self.thickness,1,-1)
+            cv2.circle(self.mask,(curX,curY),self.thickness.get(),1,-1)
 
             for i in range(self.masklist.shape[-1]):
                 temp_mask=self.masklist[:,:,i].copy()
-                cv2.circle(temp_mask,(curX,curY),self.thickness,1,-1)
+                cv2.circle(temp_mask,(curX,curY),self.thickness.get(),1,-1)
                 self.masklist[:,:,i]=temp_mask
 
-            self.canvas.create_oval(curX-self.thickness, curY-self.thickness, curX+self.thickness, curY+self.thickness, outline="white", fill = "white" )
+            self.canvas.create_oval(curX-self.thickness.get(), curY-self.thickness.get(), curX+self.thickness.get(), curY+self.thickness.get(), outline="white", fill = "white" )
 
         elif self.var2.get()==1:#### background
 
-            cv2.circle(self.mask,(curX,curY),self.thickness,0,-1)
+            cv2.circle(self.mask,(curX,curY),self.thickness.get(),0,-1)
 
             for i in range(self.masklist.shape[-1]):
                 temp_mask=self.masklist[:,:,i].copy()
-                cv2.circle(temp_mask,(curX,curY),self.thickness,0,-1)
+                cv2.circle(temp_mask,(curX,curY),self.thickness.get(),0,-1)
                 self.masklist[:,:,i]=temp_mask
 
-            self.canvas.create_oval(curX-self.thickness, curY-self.thickness, curX+self.thickness, curY+self.thickness, outline="black", fill = "black" )
+            self.canvas.create_oval(curX-self.thickness.get(), curY-self.thickness.get(), curX+self.thickness.get(), curY+self.thickness.get(), outline="black", fill = "black" )
         
 
 

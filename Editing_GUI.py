@@ -43,14 +43,14 @@ class Main_app:
         filemenu.add_separator()
         filemenu.add_command(label="Recoloring", command=self.Recoloring)
 
-        filemenu.add_separator()
-        filemenu.add_command(label="Thickness, Scattering and Weights modification", command=self.Thickness_Scattering_Weights_modification)
+        # filemenu.add_separator()
+        # filemenu.add_command(label="Thickness, Scattering and Weights modification", command=self.Thickness_Scattering_Weights_modification)
 
         filemenu.add_separator()
         filemenu.add_command(label="Local_Alpha_Matting", command=self.Local_Alpha_Matting)
 
-        filemenu.add_separator()
-        filemenu.add_command(label="Open unprocessed example image and Extract pigments", command=self.OpenFile_version2)
+        # filemenu.add_separator()
+        # filemenu.add_command(label="Open unprocessed example image and Extract pigments", command=self.OpenFile_version2)
 
         filemenu.add_separator()
         filemenu.add_command(label="Reset", command=self.Reset)
@@ -249,20 +249,20 @@ class Main_app:
 
     def Grabcut(self):
         global grabcut_app
-        grabcut_app=Grabcut_app(self)
-        
+        grabcut_app=Grabcut_app(self)        
 
 
     def Copy_Paste_Insert_Delete(self):
-        self.mask=grabcut_app.return_results()
+        global copy_paste_insert_delete_app
         copy_paste_insert_delete_app=Copy_Paste_Insert_Delete_app(self)
         
 
     def Recoloring(self): ### can local or global
+        global recoloring_app
         recoloring_app=Recoloring_app(self)
     
-    def Thickness_Scattering_Weights_modification(self):
-        thickness_scattering_weights_modification_app=Thickness_Scattering_Weights_modification_app(self)
+    # def Thickness_Scattering_Weights_modification(self):
+    #     thickness_scattering_weights_modification_app=Thickness_Scattering_Weights_modification_app(self)
 
     def Local_Alpha_Matting(self):
         local_alpha_matte_app=Local_Alpha_Matting_app(self)
