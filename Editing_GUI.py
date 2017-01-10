@@ -69,6 +69,7 @@ class Main_app:
 
 
 
+
     def Show_image(self, img, option=0):
         self.master.title('Main window')
         width,height=img.size
@@ -86,7 +87,6 @@ class Main_app:
 
     def Reset(self):
         self.Show_image(self.im, option=1)
-        self.control=0
 
     def About(self):
         print "####"

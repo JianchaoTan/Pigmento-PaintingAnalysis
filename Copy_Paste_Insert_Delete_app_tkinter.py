@@ -547,10 +547,10 @@ class Copy_Paste_Insert_Delete_app:
 
 
         self.var0_0 = IntVar()
-        Checkbutton(self.newWindow, text="CopyPaste (CAF-based)", variable=self.var0_0, command=self.update_txt0_0).grid(row=3, sticky=W, pady=10)
+        # Checkbutton(self.newWindow, text="CopyPaste (CAF-based)", variable=self.var0_0, command=self.update_txt0_0).grid(row=3, sticky=W, pady=10)
         
         self.var0_1 = IntVar()
-        Checkbutton(self.newWindow, text="Delete (CAF-based)", variable=self.var0_1, command=self.update_txt0_1).grid(row=3, sticky=W, padx=200, pady=10)
+        # Checkbutton(self.newWindow, text="Delete (CAF-based)", variable=self.var0_1, command=self.update_txt0_1).grid(row=3, sticky=W, padx=200, pady=10)
         
         self.var1_0 = IntVar()
         Checkbutton(self.newWindow, text="CopyPaste (Select-based)", variable=self.var1_0, command=self.update_txt1_0).grid(row=4, sticky=W, pady=10)
