@@ -202,11 +202,15 @@ class Grabcut_app:
 
     
     def save_as(self):
-        if self.new_canvas!=None:
-            ps=self.new_canvas.postscript(colormode='color')
-            hen = asksaveasfilename(defaultextension = '.png')
-            im = Image.open(io.BytesIO(ps.encode('utf-8')))
-            im.save(hen)
+        hen = asksaveasfilename(defaultextension = '.png')
+        Image.fromarray(self.finalmask).save(hen)
+
+
+        # if self.new_canvas!=None:
+        #     ps=self.new_canvas.postscript(colormode='color')
+        #     hen = asksaveasfilename(defaultextension = '.png')
+        #     im = Image.open(io.BytesIO(ps.encode('utf-8')))
+        #     im.save(hen)
 
     def Reset(self):
         

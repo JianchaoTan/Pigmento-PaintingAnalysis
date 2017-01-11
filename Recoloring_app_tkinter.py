@@ -426,7 +426,7 @@ class Recoloring_app:
 		self.user_select_indices=np.asarray([self.var_list['p-'+str(i)].get() for i in range(self.PigNum)])
 		
 
-		if self.var_change_pig.get()==1:  ## this is needed by "recolor by changing pigments".
+		if self.var_change_pig.get()==1 or (self.var_change_pig.get()==0 and self.var_change_scattering.get()==0 and self.var_change_weights.get()==0):  ## this is needed by "recolor by changing pigments".
 			# print self.user_select_indices
 			# print self.user_select_indices_copy
 			diff=self.user_select_indices-self.user_select_indices_copy
