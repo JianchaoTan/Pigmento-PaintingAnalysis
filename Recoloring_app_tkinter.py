@@ -531,7 +531,7 @@ class Recoloring_app:
 	    width,height=img.size
 	    # print width, height
 	    if option==0:
-	        self.canvas = tk.Canvas(master, width=width, height=height, cursor="cross")
+	        self.canvas = tk.Canvas(master, width=width, height=height, highlightthickness=0, borderwidth=0, cursor="cross")
 	        self.canvas.pack(side="top", fill="both", expand=True)
 	    self.tk_im = ImageTk.PhotoImage(img)
 	    self.canvas.create_image(0,0,anchor="nw",image=self.tk_im)
@@ -671,7 +671,7 @@ class Recoloring_app:
 	    if self.showing==0:
 	        self.new_master=tk.Toplevel()
 	        self.new_master.title('Results')
-	        self.new_canvas = tk.Canvas(self.new_master, width=width, height=height, cursor="cross")
+	        self.new_canvas = tk.Canvas(self.new_master, width=width, height=height, highlightthickness=0, borderwidth=0, cursor="cross")
 	        self.new_canvas.pack(side="top", fill="both", expand=True)
 	        self.showing=1
 
@@ -690,7 +690,7 @@ class Recoloring_app:
 	    if self.showing==0:
 	        self.new_master=tk.Toplevel()
 	        self.new_master.title('Results')
-	        self.new_canvas = tk.Canvas(self.new_master, width=width, height=height, cursor="cross")
+	        self.new_canvas = tk.Canvas(self.new_master, width=width, height=height, highlightthickness=0, borderwidth=0, cursor="cross")
 	        self.new_canvas.pack(side="top", fill="both", expand=True)
 	        self.showing=1
 

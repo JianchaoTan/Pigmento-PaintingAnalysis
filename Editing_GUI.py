@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import Tkinter as tk
 from Tkinter import *
 from tkFileDialog   import askopenfilename, askdirectory
@@ -75,7 +77,7 @@ class Main_app:
         width,height=img.size
         # print width, height
         if option==0:
-            self.canvas = tk.Canvas(self.master, width=width, height=height, cursor="cross")
+            self.canvas = tk.Canvas(self.master, width=width, height=height, highlightthickness=0, borderwidth=0, cursor="cross")
             self.canvas.pack(side="top", fill="both", expand=True)
         else:
             self.canvas.config(width=width, height=height)
