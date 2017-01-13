@@ -31,13 +31,19 @@ class Grabcut_app:
         self.showing=0
 
         self.AllData=controller.AllData ##### our data here is using weights, not thickness.
-        self.data=self.AllData.KM_weights
-        self.PigNum=self.data.shape[-1]
-        self.data_imgs=(self.data*255.0).round().clip(0,255).astype(np.uint8)
-        self.data_imgs_copy=self.data_imgs.copy()
-        print self.data_imgs.shape
+        self.KM_weights_data=self.AllData.KM_weights
+        self.PigNum=self.KM_weights_data.shape[-1]
+        self.KM_weights_data_imgs=(self.KM_weights_data*255.0).round().clip(0,255).astype(np.uint8)
+        self.KM_weights_data_imgs_copy=self.KM_weights_data_imgs.copy()
+        print self.KM_weights_data_imgs.shape
 
-        row, col, M=self.data_imgs.shape
+
+        self.PD_weights_data=self.AllData.PD_weights
+        self.PD_weights_data_imgs=(self.PD_weights_data*255.0).round().clip(0,255).astype(np.uint8)
+        self.PD_weights_data_imgs_copy=self.PD_weights_data_imgs.copy()
+
+
+        row, col, M=self.KM_weights_data_imgs.shape
         if (M%3)!=0:
             N=M/3+1
         else:
@@ -62,8 +68,12 @@ class Grabcut_app:
 
         self.newWindow.title("Grabcut Window")
 
-        self.var3 = IntVar()
-        Checkbutton(self.newWindow, text="UseOurData (default is RGB)", variable=self.var3, command=self.update_status).grid(row=0, sticky=W, pady=5)
+
+        self.var3 = IntVar()  ### 0 for RGB, 1 for KM_weights, 2 for PD_weights
+        Label(self.newWindow, text="Option (0:RGB, 1:KM, 2:PD)").grid(row=0, sticky=W, rowspan=2, pady=10)
+        self.var3=Scale(self.newWindow, from_=0, to=2, orient=HORIZONTAL, command=self.update_status)
+        self.var3.grid(row=0, sticky=W, padx=200, pady=10)
+        self.var3.set(0) ### default for RGB
 
 
         for i in range(self.PigNum):
@@ -117,9 +127,17 @@ class Grabcut_app:
         if self.var2.get()==1:
             self.var1.set(0)
 
-    def update_status(self):
+    def update_status(self, args): ### when change option, reset to use rect first in grabcut.
         if self.rect_or_mask==1:
             self.rect_or_mask=0
+
+        if self.var_showing_our_data.get()==1:
+            ###show image.
+            if self.var3.get()==1: ## show KM
+                self.Show_image(self.master, Image.fromarray(self.KM_weights_data_imgs_copy[:,:,self.current_Extracted_pigments_index]), option=1)
+            elif self.var3.get()==2:## show PD
+                self.Show_image(self.master, Image.fromarray(self.PD_weights_data_imgs_copy[:,:,self.current_Extracted_pigments_index]), option=1)
+
 
 
     def update_status1(self):
@@ -133,6 +151,8 @@ class Grabcut_app:
 
         self.user_select_indices=np.asarray([self.var_list['p-'+str(i)].get() for i in range(self.PigNum)])
         self.user_select_indices_copy=self.user_select_indices.copy()
+        
+
         
 
     def update_status2(self):
@@ -158,29 +178,40 @@ class Grabcut_app:
                     self.var_list['p-'+str(i)].set(0)
 
             self.user_select_indices=np.asarray([self.var_list['p-'+str(i)].get() for i in range(self.PigNum)])
-            self.user_select_indices_copy=self.user_select_indices.copy()
             
             ###show image.
-            self.Show_image(self.master, Image.fromarray(self.data_imgs_copy[:,:,self.current_Extracted_pigments_index]), option=1)
-
+            if self.var3.get()==1: ## show KM
+                self.Show_image(self.master, Image.fromarray(self.KM_weights_data_imgs_copy[:,:,self.current_Extracted_pigments_index]), option=1)
+            elif self.var3.get()==2:## show PD
+                self.Show_image(self.master, Image.fromarray(self.PD_weights_data_imgs_copy[:,:,self.current_Extracted_pigments_index]), option=1)
 
         if (self.user_select_indices!=0).any() or (self.user_select_indices==0).all():
             self.var_for_all.set(0)
         if (self.user_select_indices!=0).all():
             self.var_for_all.set(1)
+
+        self.user_select_indices_copy=self.user_select_indices.copy()
+
+
+
      
 
     def update_status3(self):
         if self.var_showing_our_data.get()==0:
             self.Show_image(self.master, self.im, option=1)
         if self.var_showing_our_data.get()==1:
-            self.Show_image(self.master, Image.fromarray(self.data_imgs_copy[:,:,self.current_Extracted_pigments_index]), option=1)
+            ###show image.
+            if self.var3.get()==1: ## show KM
+                self.Show_image(self.master, Image.fromarray(self.KM_weights_data_imgs_copy[:,:,self.current_Extracted_pigments_index]), option=1)
+            elif self.var3.get()==2:## show PD
+                self.Show_image(self.master, Image.fromarray(self.PD_weights_data_imgs_copy[:,:,self.current_Extracted_pigments_index]), option=1)
 
     def update_use_intermediate_mask(self):
         if self.var_use_intermediate_mask.get()==1:
             self.rect_or_mask=1
 
-            row, col, M=self.data_imgs_copy.shape
+            row, col=self.img2.shape[:2]
+            M=len(self.user_select_indices)
             if (M%3)!=0:
                 N=M/3+1
             else:
@@ -227,7 +258,7 @@ class Grabcut_app:
         self.var1.set(0)
         self.var2.set(0)
         
-        if self.var3.get()==1:
+        if self.var3.get()==1 or self.var3.get()==2:
             self.var_use_intermediate_mask.set(0)
             self.var_showing_our_data.set(0)
 
@@ -242,13 +273,13 @@ class Grabcut_app:
         self.current_Extracted_pigments_index=0
 
 
-        row, col, M=self.data_imgs.shape
+        row, col, M=self.KM_weights_data_imgs_copy.shape
         if (M%3)!=0:
             N=M/3+1
         else:
             N=M/3
         
-        # print self.data_imgs.shape
+        # print self.KM_weights_data_imgs.shape
         # print self.mask.shape
         self.mask_copy=self.mask.copy()
         self.masklist = np.zeros((row,col,N), dtype=np.uint8)
@@ -305,15 +336,83 @@ class Grabcut_app:
             # output = cv2.bitwise_and(self.img2,self.img2,mask=self.finalmask)
 
 
-        elif self.var3.get()==1: ### use our weights or thickness map as input
+        elif self.var3.get()==1: ### use our KM weights
             # print self.var3.get()
             
-            self.data_imgs=self.data_imgs_copy[:,:,np.nonzero(self.user_select_indices)[0]].reshape((self.data_imgs_copy.shape[0], self.data_imgs_copy.shape[1], -1))
+            self.KM_weights_data_imgs=self.KM_weights_data_imgs_copy[:,:,np.nonzero(self.user_select_indices)[0]].reshape((self.KM_weights_data_imgs_copy.shape[0], self.KM_weights_data_imgs_copy.shape[1], -1))
             
             # print self.user_select_indices
-            # print self.data_imgs.shape
+            # print self.KM_weights_data_imgs.shape
 
-            row,col,M=self.data_imgs.shape
+            row,col,M=self.KM_weights_data_imgs.shape
+            # print self.rect_or_mask
+            
+            if (M%3)!=0:
+                N=M/3+1
+            else:
+                N=M/3
+            
+
+            print self.rect_or_mask
+            print N
+            print self.masklist.shape
+
+
+            if self.rect_or_mask == 0:         # grabcut with rect
+                
+
+                for i in range(N):
+                    bgdmodel = np.zeros((1,65),np.float64)
+                    fgdmodel = np.zeros((1,65),np.float64)
+
+                    temp_img=np.ones((row,col,3),dtype=np.uint8)
+                    index_list=np.array([ (i*3)%M, (i*3+1)%M, (i*3+2)%M ])
+                    temp_img[:,:,:]=self.KM_weights_data_imgs[:,:,index_list].copy()
+
+                    temp_mask=self.masklist[:,:,i].copy()
+ 
+                    cv2.grabCut(temp_img,temp_mask,self.rectangle,bgdmodel,fgdmodel,1,cv2.GC_INIT_WITH_RECT)
+                    self.masklist[:,:,i]=temp_mask.copy()
+
+
+                self.rect_or_mask = 1
+
+            elif self.rect_or_mask == 1:         # grabcut with mask
+                
+
+                for i in range(N):
+                    bgdmodel = np.zeros((1,65),np.float64)
+                    fgdmodel = np.zeros((1,65),np.float64)
+
+                    temp_img=np.ones((row,col,3),dtype=np.uint8)
+                    index_list=np.array([ (i*3)%M, (i*3+1)%M, (i*3+2)%M ])
+                    temp_img[:,:,:]=self.KM_weights_data_imgs[:,:,index_list].copy()
+                    temp_mask=self.masklist[:,:,i].copy()
+                    cv2.grabCut(temp_img,temp_mask,self.rectangle,bgdmodel,fgdmodel,1,cv2.GC_INIT_WITH_MASK)
+                    self.masklist[:,:,i]=temp_mask.copy()
+                    
+
+            for i in range(N):
+                self.finalmasklist[:,:,i]=np.where((self.masklist[:,:,i]==1) + (self.masklist[:,:,i]==3),255,0).astype('uint8')
+            
+            self.finalmask = self.finalmasklist[:,:,0]
+
+            if N>1:
+                for i in range(1,N):
+                    self.finalmask=cv2.bitwise_or(self.finalmask,self.finalmasklist[:,:,i])
+
+
+
+
+        elif self.var3.get()==2: ### use PD weights
+            # print self.var3.get()
+            
+            self.PD_weights_data_imgs=self.PD_weights_data_imgs_copy[:,:,np.nonzero(self.user_select_indices)[0]].reshape((self.PD_weights_data_imgs_copy.shape[0], self.PD_weights_data_imgs_copy.shape[1], -1))
+            
+            # print self.user_select_indices
+            # print self.PD_weights_data_imgs.shape
+
+            row,col,M=self.PD_weights_data_imgs.shape
             # print self.rect_or_mask
             
             if (M%3)!=0:
@@ -331,7 +430,7 @@ class Grabcut_app:
 
                     temp_img=np.ones((row,col,3),dtype=np.uint8)
                     index_list=np.array([ (i*3)%M, (i*3+1)%M, (i*3+2)%M ])
-                    temp_img[:,:,:]=self.data_imgs[:,:,index_list].copy()
+                    temp_img[:,:,:]=self.PD_weights_data_imgs[:,:,index_list].copy()
 
                     temp_mask=self.masklist[:,:,i].copy()
  
@@ -351,7 +450,7 @@ class Grabcut_app:
 
                     temp_img=np.ones((row,col,3),dtype=np.uint8)
                     index_list=np.array([ (i*3)%M, (i*3+1)%M, (i*3+2)%M ])
-                    temp_img[:,:,:]=self.data_imgs[:,:,index_list].copy()
+                    temp_img[:,:,:]=self.PD_weights_data_imgs[:,:,index_list].copy()
                     temp_mask=self.masklist[:,:,i].copy()
                     cv2.grabCut(temp_img,temp_mask,self.rectangle,bgdmodel,fgdmodel,1,cv2.GC_INIT_WITH_MASK)
                     self.masklist[:,:,i]=temp_mask.copy()
@@ -365,8 +464,6 @@ class Grabcut_app:
             if N>1:
                 for i in range(1,N):
                     self.finalmask=cv2.bitwise_or(self.finalmask,self.finalmasklist[:,:,i])
-
-
             
 
         
