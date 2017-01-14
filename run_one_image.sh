@@ -141,12 +141,75 @@ cat <<EOF >>$html
 </table>
 <h1>Reconstruction</h1>
 <table width="100%">
-<tr><th>Input</th>
-  <th>Reconstructed</th></tr>
-<tr><td><img width="100%" src="${image}"></td>
-  <td><img width="100%" src="${prefix}-final_recursivelevel--fixed_KS-reconstructed.png"</td></tr>
+<tr><th>Input</th><th>PD Mixing/Layering Reconstruction</th></tr>
+<tr>
+<td><img width="100%" src="${image}"></td>
+<td><img width="100%" src="${imagebase}-${pigments}-PD_layers-order1-reconstructed.png"</td>
+</tr>
+
+<tr><th>KM Mixing Reconstruction</th><th>KM Layering Reconstruction</th></tr>
+<tr>
+<td><img width="100%" src="${imagebase}-${pigments}-KM_mixing-reconstructed.png"</td>
+<td><img width="100%" src="${imagebase}-${pigments}-KM_layers-order1-reconstructed.png"</td>
+</tr>
 </table>
-<h1>Mixing Weights</h1>
+
+
+<h1>KM Mixing Weights</h1>
+<img src="primary_pigments_color-${pigments}.png"><br>
+<table width="100%">
+EOF
+for i in $(seq 1 2 $pigments); do
+	p=$((i-1))
+	q=$((p+1))
+	cat <<EOF >>$html
+<tr>
+<td><img width="100%" src="${imagebase}-${pigments}-KM_mixing-weights_map-0${p}.png"></td>
+<td><img width="100%" src="${imagebase}-${pigments}-KM_mixing-weights_map-0${q}.png"></td>
+</tr>
+EOF
+done
+cat <<EOF >>$html
+</table>
+
+
+<h1>KM Layering Thickness</h1>
+<img src="primary_pigments_color-${pigments}.png"><br>
+<table width="100%">
+EOF
+for i in $(seq 1 2 $pigments); do
+	p=$((i-1))
+	q=$((p+1))
+	cat <<EOF >>$html
+<tr>
+<td><img width="100%" src="${imagebase}-${pigments}-KM_layers-order1-thickness_map-0${p}.png"></td>
+<td><img width="100%" src="${imagebase}-${pigments}-KM_layers-order1-thickness_map-0${q}.png"></td>
+</tr>
+EOF
+done
+cat <<EOF >>$html
+</table>
+
+
+<h1>PD Mixing Weights</h1>
+<img src="primary_pigments_color-${pigments}.png"><br>
+<table width="100%">
+EOF
+for i in $(seq 1 2 $pigments); do
+	p=$((i-1))
+	q=$((p+1))
+	cat <<EOF >>$html
+<tr>
+<td><img width="100%" src="${imagebase}-${pigments}-PD_mixing-weights_map-0${p}.png"></td>
+<td><img width="100%" src="${imagebase}-${pigments}-PD_mixing-weights_map-0${q}.png"></td>
+</tr>
+EOF
+done
+cat <<EOF >>$html
+</table>
+
+
+<h1>PD Layering Opacities</h1>
 <img src="primary_pigments_color-${pigments}.png"><br>
 <table width="100%">
 EOF
@@ -155,13 +218,16 @@ for i in $(seq 1 2 $pigments); do
 	p=$((i-1))
 	q=$((p+1))
 	cat <<EOF >>$html
-<tr><td><img width="100%" src="${prefix}-final_recursivelevel--mixing_weights_map-0${p}.png"></td>
-  <td><img width="100%" src="${prefix}-final_recursivelevel--mixing_weights_map-0${q}.png"></td></tr>
+<tr>
+<td><img width="100%" src="${imagebase}-${pigments}-PD_layers-order1-opacities_map-0${p}.png"></td>
+<td><img width="100%" src="${imagebase}-${pigments}-PD_layers-order1-opacities_map-0${q}.png"></td>
+</tr>
 EOF
 done
-
 cat <<EOF >>$html
 </table>
+
+
 </body>
 </html>
 EOF
