@@ -80,7 +80,8 @@ You need create a layer order file manually: "order1.txt" and put it in /wheatfi
 
 # For whole pipeline in Tan2016
 
-#### Extract palettes. All results will saved in a created folder "Tan2016_PD_results"
+#### 1. Extract palettes:
+All results will saved in a created folder "Tan2016_PD_results"
 
 ```sh
 	$ cd new_pipeline_executable
@@ -89,7 +90,7 @@ You need create a layer order file manually: "order1.txt" and put it in /wheatfi
 ```
 
 
-#### Extract layers. 
+#### 2. Extract layers. 
 Like before, you need a different "order1.txt" file for different examples, and same "weights-poly3-opaque400-dynamic40000.js" for all examples. You can just simply set "order1.txt" content as 0 1 2 3 4 5 in this example.  All results will saved in a created folder "Tan2016_PD_results"
 
 ```sh
