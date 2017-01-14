@@ -31,7 +31,7 @@
 ##### 1. Extract KM primary pigments: 
 User can give number of pigments, for example, "6" in the command line below.
 ```sh
-	$ cd /new_pipeline_executable
+	$ cd new_pipeline_executable
 
 	$ python step1_ANLS_with_autograd.py wheatfield-crop-steve.png Existing_KS_parameter_KS.txt 2 None wheatfield-crop-steve-sampled_pixels-400 0 6 10.0 0.0 0.0 0.001 0.001 1e-6 /wheatfield-crop None 0 1 10000 400 1 0
 ```
@@ -41,7 +41,7 @@ User can give number of pigments, for example, "6" in the command line below.
 You can use default parameter values in command line directly, only need change example name.
 
 ```sh
-	$ cd /new_pipeline_executable/wheatfield-crop
+	$ cd new_pipeline_executable/wheatfield-crop
 
 	$ python ../Solve_KM_mixing_model_fixed_KS_with_autograd.py wheatfield-crop-steve.png  primary_pigments_KS-6.txt  None wheatfield-crop-steve-primary_pigments_color_vertex-6-KM_weights-W_w_10.0-W_sparse_0.1-W_spatial_1.0-choice_0-blf-W_neighbors_0.0-Recursive_Yes 10.0 0.1 0 1.0 0.0 blf Yes
 ```
@@ -49,9 +49,9 @@ You can use default parameter values in command line directly, only need change 
 
 
 ##### 3. Extract KM layers: 
-You need create a layer order file manually: "order1.txt" and put it in /wheatfield-crop folder, since we are using 6 prigments, so "order1.txt" content can be like: 0 1 2 3 4 5 or their permutations. Then you can run below command.
+You need create a layer order file manually: "order1.txt" and put it in /wheatfield-crop folder, since we are using 6 pigments, so "order1.txt" content can be like: 0 1 2 3 4 5 or their permutations.Then you can run below command.
 ```sh
-	$ cd /new_pipeline_executable/wheatfield-crop
+	$ cd new_pipeline_executable/wheatfield-crop
 
 	$ python ../Solve_KM_layer_model_fixed_KS_with_autograd.py wheatfield-crop-steve.png  primary_pigments_KS-6.txt  None wheatfield-crop-steve-primary_pigments_color_vertex-6-KM_layers-W_w_10.0-W_sparse_0.1-W_spatial_1.0-choice_0-blf-W_neighbors_0.0-Recursive_Yes-order1 10.0 0.1 0 1.0 0.0 blf Yes order1.txt
 ```
@@ -60,7 +60,7 @@ You need create a layer order file manually: "order1.txt" and put it in /wheatfi
 
 ##### 4. Extract PD layers and weights (Tan 2016) using KM pigments's RGB colors as primary color. It will use same order as KM layers. 
 ```sh
-	$ cd /new_pipeline_executable
+	$ cd new_pipeline_executable
 
 	$ python fast_energy_RGB_lap_adjusted_weights.py  /wheatfield-crop wheatfield-crop-steve.png order1.txt primary_pigments_color_vertex-6.js  --weights weights-poly3-opaque400-dynamic40000.js  --solve-smaller-factor 2 --save-every 50
 ```
@@ -69,7 +69,7 @@ You need create a layer order file manually: "order1.txt" and put it in /wheatfi
 
 ##### 5. GUI code. Above commands will generate a "Application_Files" folder in the "wheatfield-crop" folder, which will contain all needed files for GUI. 
 ```sh
-	$ cd /new_pipeline_executable
+	$ cd new_pipeline_executable
 
 	$ python Editing_GUI.py
 ```
@@ -80,19 +80,20 @@ You need create a layer order file manually: "order1.txt" and put it in /wheatfi
 
 # For whole pipeline in Tan2016
 
-#### Extract palettes.
+#### Extract palettes. All results will saved in a created folder "Tan2016_PD_results"
 
 ```sh
-	$ cd /new_pipeline_executable
+	$ cd new_pipeline_executable
 
 	$ python Extract_PD_palettes.py wheatfield-crop-steve.png 6 /wheatfield-crop
 ```
 
 
-#### Extract layers. Like before, you need a different "order1.txt" file for different examples, and same "weights-poly3-opaque400-dynamic40000.js" for all examples. You can just simply set "order1.txt" content as 0 1 2 3 4 5 in this example
+#### Extract layers. 
+Like before, you need a different "order1.txt" file for different examples, and same "weights-poly3-opaque400-dynamic40000.js" for all examples. You can just simply set "order1.txt" content as 0 1 2 3 4 5 in this example.  All results will saved in a created folder "Tan2016_PD_results"
 
 ```sh
-	$ cd /new_pipeline_executable
+	$ cd new_pipeline_executable
 
 	$ python Extract_PD_layers.py  /wheatfield-crop wheatfield-crop-steve.png order1.txt wheatfield-crop-steve-6-PD_palettes.js  --weights weights-poly3-opaque400-dynamic40000.js  --solve-smaller-factor 2 --save-every 50
 ```
