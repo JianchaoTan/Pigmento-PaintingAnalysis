@@ -12,17 +12,10 @@ def KM_mixing_rendering(H, W, img):
     M=H.shape[0]
     L=H.shape[1]/2
 
-    Weights=W.reshape((N,M))
-    Weights=Weights/Weights.sum(axis=1).reshape((-1,1))
-
-    K0=H[:,:L]
-    S0=H[:,L:]
-    
-    K=np.dot(Weights,K0) ### N*L shape,  per pixel K
-    S=np.dot(Weights,S0)
+    W=W.reshape((-1,M))
 
     ### reconstruction of input
-    R_vector=equations_in_RealPigments(K, S, r=np.ones((N,L)), h=np.ones((N,1))) ## r should be (N*L)shape. h should be (N*1)shape
+    R_vector=KM_mixing_multiplepigments(H[:,:L], H[:,L:], W, r=np.ones((N,L)), h=np.ones((N,1))) ## r should be (N*L)shape. h should be (N*1)shape
     P_vector=R_vector*Illuminantnew[:,1].reshape((1,-1)) ### shape is N*L
     R_xyz=(P_vector.reshape((-1,1,L))*R_xyzcoeff.reshape((1,3,L))).sum(axis=2)   ###shape N*3*L to shape N*3 
     Normalize=(Illuminantnew[:,1]*R_xyzcoeff[1,:]).sum() ### scalar value.
@@ -38,20 +31,17 @@ def KM_mixing_rendering(H, W, img):
 
 if __name__=="__main__":
 
-	img_name=sys.argv[1] #### only used to give image shape.
-	pigments_KS_name=sys.argv[2] #### primary pigments KS.
-	weights_name=sys.argv[3] #### mixing weights txt file.
+    img_name=sys.argv[1] #### only used to give image shape.
+    pigments_KS_name=sys.argv[2] #### primary pigments KS.
+    weights_name=sys.argv[3] #### mixing weights txt file.
+    output_path=sys.argv[4]
 
-	img=np.asarray(Image.open(img_name).convert('RGB'))
-	H=np.loadtxt(pigments_KS_name)
-	Weights=np.loadtxt(weights_name) 
+    img=np.asarray(Image.open(img_name).convert('RGB'))
+    H=np.loadtxt(pigments_KS_name)
+    Weights=np.loadtxt(weights_name) 
 
-	rendered_img=KM_mixing_rendering(H,Weights,img)  
-	Image.fromarray(rendered_img).save(os.path.splitext(img_name)[0]+"-mixing_rendered_img.png")
-
-
-
-
+    rendered_img=KM_mixing_rendering(H,Weights,img)  
+    Image.fromarray(rendered_img).save(output_path)
 
 
 
