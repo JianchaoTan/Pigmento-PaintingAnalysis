@@ -28,11 +28,10 @@ class Local_Alpha_Matting_app:
         self.rect = None
         self.start_x = None
         self.start_y = None
-        self.thickness=8
         self.showing=0
         self.solve_flag=1
-        self.data=controller.AllData.KM_weights #### our data here is using weights, not thickness
-        
+        self.KM_weights_data=controller.AllData.KM_weights #### our data here is using weights, not thickness
+        self.PD_weights_data=controller.AllData.PD_weights
         self.new_master=None
         self.new_master1=None
         self.new_master2=None
@@ -42,26 +41,41 @@ class Local_Alpha_Matting_app:
 
         
         self.newWindow=tk.Toplevel(self.master)
+        self.newWindow.geometry("300x320")
         self.shift(self.newWindow, position='right_top', scale=1.1)
 
         self.newWindow.title("Alpha Matting Window")
 
-        self.var3 = IntVar()
-        Checkbutton(self.newWindow, text="UseOurData (default is RGB)", variable=self.var3, command=self.update_status).grid(row=0, sticky=W, pady=5)
+
+        self.var3=IntVar()
+        Label(self.newWindow, text="(0:RGB, 1:KM, 2:PD)").grid(row=0,sticky=W, pady=10)
+        self.var3=Scale(self.newWindow, from_=0, to=2, orient=HORIZONTAL, command=self.update_status)
+        self.var3.grid(row=0, sticky=W, padx=150, pady=10)
+        self.var3.set(0)
 
         self.var1 = IntVar()
         Checkbutton(self.newWindow, text="foreground", variable=self.var1, command=self.update_txt1).grid(row=1, sticky=W)
         self.var2 = IntVar()
         Checkbutton(self.newWindow, text="background", variable=self.var2, command=self.update_txt2).grid(row=2, sticky=W)
         
+        self.thickness=IntVar()
+        Label(self.newWindow, text="Scribble_size").grid(row=3,sticky=W, pady=10)
+        self.thickness=Scale(self.newWindow, from_=2, to=10, orient=HORIZONTAL)
+        self.thickness.grid(row=3, sticky=W, padx=100, pady=10)
+        self.thickness.set(5)
 
-        Button(self.newWindow, text='Execute', command=self.Execute).grid(row=4, sticky=W, pady=4)
-        
-        Button(self.newWindow, text='Reset', command=self.Reset).grid(row=5, sticky=W, pady=4)
 
-        Button(self.newWindow, text='Save', command=self.save_as).grid(row=6, sticky=W, pady=4)
+        self.var_post_smooth = IntVar()
+        Checkbutton(self.newWindow, text="Post-joint-bilateral-filtering", variable=self.var_post_smooth).grid(row=5, sticky=W, pady=5)
 
-        Button(self.newWindow, text='Quit', command=self.Quit).grid(row=7, sticky=W, pady=4)
+
+        Button(self.newWindow, text='Execute', command=self.Execute).grid(row=7, sticky=W, pady=4)
+
+        Button(self.newWindow, text='Reset', command=self.Reset).grid(row=8, sticky=W, pady=4)
+
+        Button(self.newWindow, text='Save', command=self.save_as).grid(row=9, sticky=W, pady=4)
+
+        Button(self.newWindow, text='Quit', command=self.Quit).grid(row=10, sticky=W, pady=4)
     
     
     def update_txt1(self):
@@ -71,7 +85,7 @@ class Local_Alpha_Matting_app:
         if self.var2.get()==1:
             self.var1.set(0)
 
-    def update_status(self):
+    def update_status(self, args):
         self.solve_flag=1
     
     
@@ -93,7 +107,6 @@ class Local_Alpha_Matting_app:
         self.start_x = None
         self.start_y = None
         self.rectangle=(0,0,1,1)
-        self.thickness=8
         self.showing=0
         self.solve_flag=1
 
@@ -110,6 +123,8 @@ class Local_Alpha_Matting_app:
             self.new_master1.destroy()
         if self.new_master2!=None:
             self.new_master2.destroy()
+        if self.new_master3!=None:
+            self.new_master3.destroy()
 
 
     def Quit(self):
@@ -123,7 +138,7 @@ class Local_Alpha_Matting_app:
         width,height=img.size
         # print width, height
         if option==0:
-            self.canvas = tk.Canvas(master, width=width, height=height, cursor="cross")
+            self.canvas = tk.Canvas(master, width=width, height=height, highlightthickness=0, borderwidth=0, cursor="cross")
             self.canvas.pack(side="top", fill="both", expand=True)
         self.tk_im = ImageTk.PhotoImage(img)
         self.canvas.create_image(0,0,anchor="nw",image=self.tk_im)
@@ -138,43 +153,37 @@ class Local_Alpha_Matting_app:
         small_mask=self.mask[rect[1]:rect[1]+rect[3], rect[0]:rect[0]+rect[2]]
         Trimap[small_mask==1]=255
         Trimap[small_mask==0]=0
-        # cv2.imshow('small_mask', small_mask*255)
-        # cv2.imshow('trimap',Trimap)
-        small_data=self.data[rect[1]:rect[1]+rect[3], rect[0]:rect[0]+rect[2],:]
         WinSize=7
         Option='Linear'
+        self.new_master=1 ### temporary
         small_img=self.img2[rect[1]:rect[1]+rect[3], rect[0]:rect[0]+rect[2],:]
 
-        # cv2.imwrite(output_prefix+"-selected_region.png", small_img)
-        # cv2.imwrite(output_prefix+"-trimap.png", Trimap)
-        # np.savetxt(output_prefix+"-small_weights.txt",small_mixing_Weights.reshape((rect[3]*rect[2],-1)))
-        # print (RGB_or_Weights_flag)
-        # print (solve_flag)
-         
+
+        
 
 
-        self.new_master=1 ### temporary
+        if self.solve_flag==1 and self.var3.get()==0: #### rgb version 
 
-
-        if self.solve_flag==1 and self.var3.get()==0:
             Alpha=Image_Matting_By_Learning(Get_newformat_data(small_img,'rgb'), Trimap, WinSize=WinSize, Options=Option)
             # Alpha=Image_Matting_By_Learning(small_img/255.0, Trimap, WinSize=WinSize, Options=Option)
 
-            ### filter ALpha
+
+            ### filter ALpha bad, do not know why.
             # Alpha=cv2.ximgproc.guidedFilter(small_img, Alpha.astype(np.float32), 10, 1e-5)
             # Alpha[Trimap==255]=1.0
             # Alpha[Trimap==0]=0.0
+
             
             Alpha=(Alpha*255).round().astype(np.uint8)
 
-            # Alpha_3=np.zeros((Alpha.shape[0],Alpha.shape[1],3), dtype=np.uint8)
-            # Alpha_3[:,:,:]=Alpha.reshape((Alpha.shape[0],Alpha.shape[1],1))
-            # Alpha_3=cv2.ximgproc.jointBilateralFilter(small_img, Alpha_3, 5, 5.0, 3 )
-            # Alpha=Alpha_3[:,:,0]
+
+            if self.var_post_smooth.get()==1:
+                Alpha_3=np.zeros((Alpha.shape[0],Alpha.shape[1],3), dtype=np.uint8)
+                Alpha_3[:,:,:]=Alpha.reshape((Alpha.shape[0],Alpha.shape[1],1))
+                Alpha_3=cv2.ximgproc.jointBilateralFilter(small_img, Alpha_3, 15, 15.0, 3 )
+                Alpha=Alpha_3[:,:,0]
 
 
-            
-            # cv2.imwrite(output_prefix+Option+"-alphamatting_on_RGB.png", Alpha)
             self.solve_flag=0
             
             self.new_master1=tk.Toplevel()
@@ -183,8 +192,12 @@ class Local_Alpha_Matting_app:
   
 
 
-        if self.solve_flag==1 and self.var3.get()==1:
+        if self.solve_flag==1 and self.var3.get()==1: ### KM version
+
+            small_data=self.KM_weights_data[rect[1]:rect[1]+rect[3], rect[0]:rect[0]+rect[2],:]
+
             Alpha=Image_Matting_By_Learning(small_data, Trimap, WinSize=WinSize, Options=Option)
+
 
             ### filter ALpha
             # Alpha=cv2.ximgproc.guidedFilter(small_img, Alpha.astype(np.float32), 10, 1e-5)
@@ -193,17 +206,49 @@ class Local_Alpha_Matting_app:
             
 
             Alpha=(Alpha*255).round().astype(np.uint8)
-            # Alpha_3=np.zeros((Alpha.shape[0],Alpha.shape[1],3), dtype=np.uint8)
-            # Alpha_3[:,:,:]=Alpha.reshape((Alpha.shape[0],Alpha.shape[1],1))
-            # Alpha_3=cv2.ximgproc.jointBilateralFilter(small_img, Alpha_3, 5, 5.0, 3 )
-            # Alpha=Alpha_3[:,:,0]
+
+            if self.var_post_smooth.get()==1:
+                Alpha_3=np.zeros((Alpha.shape[0],Alpha.shape[1],3), dtype=np.uint8)
+                Alpha_3[:,:,:]=Alpha.reshape((Alpha.shape[0],Alpha.shape[1],1))
+                Alpha_3=cv2.ximgproc.jointBilateralFilter(small_img, Alpha_3, 15, 15.0, 3 )
+                Alpha=Alpha_3[:,:,0]
      
 
             self.solve_flag=0
             
             self.new_master2=tk.Toplevel()
-            self.new_master2.title('Alpha_Matting_Results-using_our_data')
+            self.new_master2.title('Alpha_Matting_Results-using_KM_weights')
             self.new_master=self.new_master2
+
+
+
+        if self.solve_flag==1 and self.var3.get()==2: ### PD version
+
+            small_data=self.PD_weights_data[rect[1]:rect[1]+rect[3], rect[0]:rect[0]+rect[2],:]
+
+            Alpha=Image_Matting_By_Learning(small_data, Trimap, WinSize=WinSize, Options=Option)
+
+
+            ### filter ALpha
+            # Alpha=cv2.ximgproc.guidedFilter(small_img, Alpha.astype(np.float32), 10, 1e-5)
+            # Alpha[Trimap==255]=1.0
+            # Alpha[Trimap==0]=0.0
+            
+
+            Alpha=(Alpha*255).round().astype(np.uint8)
+
+            if self.var_post_smooth.get()==1:
+                Alpha_3=np.zeros((Alpha.shape[0],Alpha.shape[1],3), dtype=np.uint8)
+                Alpha_3[:,:,:]=Alpha.reshape((Alpha.shape[0],Alpha.shape[1],1))
+                Alpha_3=cv2.ximgproc.jointBilateralFilter(small_img, Alpha_3, 15, 15.0, 3 )
+                Alpha=Alpha_3[:,:,0]
+     
+
+            self.solve_flag=0
+            
+            self.new_master3=tk.Toplevel()
+            self.new_master3.title('Alpha_Matting_Results-using_PD_weights')
+            self.new_master=self.new_master3
 
 
 
@@ -220,7 +265,7 @@ class Local_Alpha_Matting_app:
         width,height=img1.size
 
 
-        self.new_canvas = tk.Canvas(self.new_master, width=width*3+20, height=height, cursor="cross")
+        self.new_canvas = tk.Canvas(self.new_master, width=width*3+20, height=height, highlightthickness=0, borderwidth=0, cursor="cross")
         self.new_canvas.pack(side="top", fill="both", expand=True)
 
         tk_im1 = ImageTk.PhotoImage(img1)
@@ -260,13 +305,13 @@ class Local_Alpha_Matting_app:
 
         elif self.var1.get()==1:####foreground
 
-            cv2.circle(self.mask,(curX,curY),self.thickness,1,-1)
-            self.canvas.create_oval(curX-self.thickness, curY-self.thickness, curX+self.thickness, curY+self.thickness, outline="white", fill = "white" )
+            cv2.circle(self.mask,(curX,curY),self.thickness.get(),1,-1)
+            self.canvas.create_oval(curX-self.thickness.get(), curY-self.thickness.get(), curX+self.thickness.get(), curY+self.thickness.get(), outline="white", fill = "white" )
 
         elif self.var2.get()==1:#### background
 
-            cv2.circle(self.mask,(curX,curY),self.thickness,0,-1)
-            self.canvas.create_oval(curX-self.thickness, curY-self.thickness, curX+self.thickness, curY+self.thickness, outline="black", fill = "black" )
+            cv2.circle(self.mask,(curX,curY),self.thickness.get(),0,-1)
+            self.canvas.create_oval(curX-self.thickness.get(), curY-self.thickness.get(), curX+self.thickness.get(), curY+self.thickness.get(), outline="black", fill = "black" )
         
 
 

@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import Tkinter as tk
 from Tkinter import *
 from tkFileDialog   import askopenfilename, askdirectory
@@ -43,14 +45,14 @@ class Main_app:
         filemenu.add_separator()
         filemenu.add_command(label="Recoloring", command=self.Recoloring)
 
-        filemenu.add_separator()
-        filemenu.add_command(label="Thickness, Scattering and Weights modification", command=self.Thickness_Scattering_Weights_modification)
+        # filemenu.add_separator()
+        # filemenu.add_command(label="Thickness, Scattering and Weights modification", command=self.Thickness_Scattering_Weights_modification)
 
         filemenu.add_separator()
         filemenu.add_command(label="Local_Alpha_Matting", command=self.Local_Alpha_Matting)
 
-        filemenu.add_separator()
-        filemenu.add_command(label="Open unprocessed example image and Extract pigments", command=self.OpenFile_version2)
+        # filemenu.add_separator()
+        # filemenu.add_command(label="Open unprocessed example image and Extract pigments", command=self.OpenFile_version2)
 
         filemenu.add_separator()
         filemenu.add_command(label="Reset", command=self.Reset)
@@ -69,12 +71,13 @@ class Main_app:
 
 
 
+
     def Show_image(self, img, option=0):
         self.master.title('Main window')
         width,height=img.size
         # print width, height
         if option==0:
-            self.canvas = tk.Canvas(self.master, width=width, height=height, cursor="cross")
+            self.canvas = tk.Canvas(self.master, width=width, height=height, highlightthickness=0, borderwidth=0, cursor="cross")
             self.canvas.pack(side="top", fill="both", expand=True)
         else:
             self.canvas.config(width=width, height=height)
@@ -86,7 +89,6 @@ class Main_app:
 
     def Reset(self):
         self.Show_image(self.im, option=1)
-        self.control=0
 
     def About(self):
         print "####"
@@ -249,20 +251,20 @@ class Main_app:
 
     def Grabcut(self):
         global grabcut_app
-        grabcut_app=Grabcut_app(self)
-        
+        grabcut_app=Grabcut_app(self)        
 
 
     def Copy_Paste_Insert_Delete(self):
-        self.mask=grabcut_app.return_results()
+        global copy_paste_insert_delete_app
         copy_paste_insert_delete_app=Copy_Paste_Insert_Delete_app(self)
         
 
     def Recoloring(self): ### can local or global
+        global recoloring_app
         recoloring_app=Recoloring_app(self)
     
-    def Thickness_Scattering_Weights_modification(self):
-        thickness_scattering_weights_modification_app=Thickness_Scattering_Weights_modification_app(self)
+    # def Thickness_Scattering_Weights_modification(self):
+    #     thickness_scattering_weights_modification_app=Thickness_Scattering_Weights_modification_app(self)
 
     def Local_Alpha_Matting(self):
         local_alpha_matte_app=Local_Alpha_Matting_app(self)

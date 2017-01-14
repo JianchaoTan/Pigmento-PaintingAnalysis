@@ -189,7 +189,7 @@ def object_insertion_KS(img_pigment_KS, img_thickness, imsize, img_weights, chos
 
 
 
-def object_paste_RGB(img_pigment_RGB, img_weights, imsize, chosed_indices, mask, central_position_x, central_position_y, normalize_flag):
+def object_paste_RGB(img_pigment_RGB, img_weights, imsize, chosed_indices, mask, central_position_x, central_position_y, normalize_flag, scales):
     
     M=len(img_pigment_RGB)
     img_weights=img_weights.reshape((-1,M))
@@ -252,7 +252,7 @@ def object_paste_RGB(img_pigment_RGB, img_weights, imsize, chosed_indices, mask,
 
 
     ### change masked area
-    new_weights=img_weights[final_nonzeros_inds1,:].reshape((-1,M))+final_obj_weights
+    new_weights=img_weights[final_nonzeros_inds1,:].reshape((-1,M))+final_obj_weights * scales
 
 
     if normalize_flag==1:
@@ -273,7 +273,7 @@ def object_paste_RGB(img_pigment_RGB, img_weights, imsize, chosed_indices, mask,
 
 
 
-def object_paste_KS(img_pigment_KS, img_weights, imsize, chosed_indices, mask, central_position_x, central_position_y, normalize_flag):
+def object_paste_KS(img_pigment_KS, img_weights, imsize, chosed_indices, mask, central_position_x, central_position_y, normalize_flag, scales):
    
     M=len(img_pigment_KS)
     img_weights=img_weights.reshape((-1,M))
@@ -343,7 +343,7 @@ def object_paste_KS(img_pigment_KS, img_weights, imsize, chosed_indices, mask, c
 
 
     ### change masked area
-    new_weights=img_weights[final_nonzeros_inds1,:].reshape((-1,M))+final_obj_weights
+    new_weights=img_weights[final_nonzeros_inds1,:].reshape((-1,M))+final_obj_weights * scales
 
     if normalize_flag==1:
         new_weights_sum=new_weights.sum(axis=1).reshape((-1,1))
@@ -367,6 +367,156 @@ def object_paste_KS(img_pigment_KS, img_weights, imsize, chosed_indices, mask, c
 
 
 
+def object_paste_KS_inpaint_based(img_pigment_KS, img_weights, imsize, mask, radius, central_position_x, central_position_y, normalize_flag, scales):
+   
+    M=img_weights.shape[-1]
+    img_weights=img_weights.reshape((imsize[0], imsize[1], -1))
+    new_img_weights=(img_weights.copy()*255).round().astype(np.uint8)
+    for i in range(M):
+        new_img_weights[:,:,i]=cv2.inpaint(new_img_weights[:,:,i], mask, radius, cv2.INPAINT_TELEA)
+    
+
+    
+    obj_weights=img_weights-new_img_weights/255.0
+
+    new_img_weights=new_img_weights.reshape((-1,M))/255.0
+    img_weights=img_weights.reshape((-1,M))
+
+
+
+    N=imsize[0]*imsize[1]
+    n=len(mask[mask!=0])
+   
+    final_mask=np.zeros((imsize[0],imsize[1]),dtype=np.uint8)
+
+    nonzerosinds=np.nonzero(mask)
+    x_coord=nonzerosinds[0]
+    y_coord=nonzerosinds[1]
+    x_center=x_coord.sum()/n
+    y_center=y_coord.sum()/n
+    
+    x_coord_copy=x_coord.copy()
+    y_coord_copy=y_coord.copy()
+
+    x_shift=central_position_x-x_center
+    y_shift=central_position_y-y_center
+
+    x_coord+=x_shift
+    y_coord+=y_shift
+
+
+    final_obj_weights=[]
+    for i in range(n):
+        x=x_coord[i]
+        y=y_coord[i]
+        if x>=0 and x<imsize[0] and y>=0 and y<imsize[1]:
+            final_mask[x,y]=255
+            final_obj_weights.append(list(obj_weights[x-x_shift,y-y_shift,:]))
+
+    final_obj_weights=np.asarray(final_obj_weights)
+
+
+    final_mask_reverse=np.ones(final_mask.shape,dtype=np.uint8)*255
+    final_mask_reverse[final_mask==255]=0
+    final_mask=final_mask.reshape(-1)
+    final_mask_reverse=final_mask_reverse.reshape(-1)
+
+    final_nonzeros_inds1=np.nonzero(final_mask)[0]
+    final_nonzeros_inds2=np.nonzero(final_mask_reverse)[0]
+    
+
+
+    L=img_pigment_KS.shape[1]/2
+    K0=img_pigment_KS[:,:L]
+    S0=img_pigment_KS[:,L:]
+
+
+    
+    R_vector=np.ones((N,L)) #### pure white background
+
+
+    ### unmasked area is same as before
+    R_vector[final_nonzeros_inds2,:]=equations_in_RealPigments(np.dot(img_weights[final_nonzeros_inds2,:],K0), np.dot(img_weights[final_nonzeros_inds2,:],S0), r=R_vector[final_nonzeros_inds2,:], h=1.0)
+
+
+    ### change masked area
+    new_weights=img_weights[final_nonzeros_inds1,:].reshape((-1,M))+final_obj_weights * scales
+
+    if normalize_flag==1:
+        new_weights_sum=new_weights.sum(axis=1).reshape((-1,1))
+        new_weights_sum[new_weights_sum==0]=1e-15
+        new_weights=new_weights/new_weights_sum
+
+    R_vector[final_nonzeros_inds1,:]=equations_in_RealPigments(np.dot(new_weights,K0), np.dot(new_weights,S0), r=R_vector[final_nonzeros_inds1,:], h=1.0)
+
+
+
+
+    ### from R spectrum x wavelength spectrums to linear rgb colors 
+    P_vector=R_vector*Illuminantnew[:,1].reshape((1,-1)) ### shape is N*L
+    R_xyz=(P_vector.reshape((N,1,L))*R_xyzcoeff.reshape((1,3,L))).sum(axis=2)   ###shape N*3*L to shape N*3 
+    Normalize=(Illuminantnew[:,1]*R_xyzcoeff[1,:]).sum() ### scalar value.
+    R_xyz/=Normalize
+    R_rgb=np.dot(xyztorgb,R_xyz.transpose()).transpose() ###linear rgb value, shape is N*3
+    R_rgb=Gamma_trans_img(R_rgb.clip(0,1)) ##clip and gamma correction
+    output=R_rgb.reshape((imsize[0],imsize[1],3))
+    return (output*255).round().astype(np.uint8)
+
+
+
+
+def object_remove_KS_inpaint_based(img_pigment_KS, img_weights, imsize, mask, radius, normalize_flag):
+    M=img_weights.shape[-1]
+    img_weights=img_weights.reshape((imsize[0], imsize[1], -1))
+    new_img_weights=(img_weights.copy()*255).round().astype(np.uint8)
+    for i in range(M):
+        new_img_weights[:,:,i]=cv2.inpaint(new_img_weights[:,:,i], mask, radius, cv2.INPAINT_TELEA)
+    new_img_weights=new_img_weights.reshape((-1,M))/255.0
+    img_weights=img_weights.reshape((-1,M))
+
+    N=imsize[0]*imsize[1]
+    n=len(mask[mask!=0])
+    mask_reverse=np.ones(mask.shape,dtype=np.uint8)*255
+    mask_reverse[mask==255]=0
+    mask=mask.reshape(-1)
+    mask_reverse=mask_reverse.reshape(-1)
+
+    final_nonzeros_inds1=np.nonzero(mask)[0]
+    final_nonzeros_inds2=np.nonzero(mask_reverse)[0]
+
+    L=img_pigment_KS.shape[1]/2
+    K0=img_pigment_KS[:,:L]
+    S0=img_pigment_KS[:,L:]
+
+    R_vector=np.ones((N,L)) #### pure white background
+    
+    ###non-masked area is keep same
+    R_vector[final_nonzeros_inds2,:]=equations_in_RealPigments(np.dot(img_weights[final_nonzeros_inds2,:],K0), np.dot(img_weights[final_nonzeros_inds2,:],S0), r=R_vector[final_nonzeros_inds2,:], h=1.0)
+    
+
+    ### change masked area
+    new_weights=new_img_weights[final_nonzeros_inds1,:].reshape((-1,M))
+    
+    if normalize_flag==1:
+        ## Normalize!
+        new_weights_sum=new_weights.sum(axis=1).reshape((-1,1))
+        new_weights_sum[new_weights_sum==0]=1e-15
+        new_weights=new_weights/new_weights_sum
+
+    R_vector[final_nonzeros_inds1,:]=equations_in_RealPigments(np.dot(new_weights,K0), np.dot(new_weights,S0), r=R_vector[final_nonzeros_inds1,:], h=1.0)
+
+
+
+    ### from R spectrum x wavelength spectrums to linear rgb colors 
+    P_vector=R_vector*Illuminantnew[:,1].reshape((1,-1)) ### shape is N*L
+    R_xyz=(P_vector.reshape((N,1,L))*R_xyzcoeff.reshape((1,3,L))).sum(axis=2)   ###shape N*3*L to shape N*3 
+    Normalize=(Illuminantnew[:,1]*R_xyzcoeff[1,:]).sum() ### scalar value.
+    R_xyz/=Normalize
+    R_rgb=np.dot(xyztorgb,R_xyz.transpose()).transpose() ###linear rgb value, shape is N*3
+    R_rgb=Gamma_trans_img(R_rgb.clip(0,1)) ##clip and gamma correction
+    output=R_rgb.reshape((imsize[0],imsize[1],3))
+    return (output*255).round().astype(np.uint8)
+    
 
 
 
@@ -492,7 +642,7 @@ class Copy_Paste_Insert_Delete_app:
         self.canvas=controller.canvas
         self.mask=controller.mask
 
-        if self.mask==None:
+        if self.mask is None:
             print "no input mask"
         else:
             print self.mask.shape
@@ -519,16 +669,16 @@ class Copy_Paste_Insert_Delete_app:
         self.newWindow=tk.Toplevel(self.master)
 
         self.newWindow.title("Copy_Paste_Insert_Delete Window")
-        self.newWindow.geometry("700x400")
+        self.newWindow.geometry("700x500")
         self.shift(self.newWindow)
 
         self.var3 = IntVar()
         Checkbutton(self.newWindow, text="Use PD version (default is KM version)", variable=self.var3, command=self.update_status).grid(row=0, sticky=W, pady=15)
         
 
-
         
         self.PigNum=self.AllData.KM_pigments.shape[0]
+        self.user_select_indices=np.zeros(self.PigNum, dtype=np.uint8)
 
 
         for i in range(self.PigNum):
@@ -546,54 +696,71 @@ class Copy_Paste_Insert_Delete_app:
             Checkbutton(self.newWindow, text="p-"+str(i), variable=self.var_list["p-"+str(i)], command=self.update_status2).grid(row=2, sticky=W, padx=125+55*(i+1), pady=5)
 
 
-
+        #### CAF-based:  can use cv2.inpaint, 
         self.var0_0 = IntVar()
-        # Checkbutton(self.newWindow, text="CopyPaste (CAF-based)", variable=self.var0_0, command=self.update_txt0_0).grid(row=3, sticky=W, pady=10)
+        Checkbutton(self.newWindow, text="CopyPaste (CAF-based)", variable=self.var0_0, command=self.update_txt0_0).grid(row=3, sticky=W, pady=10)
         
         self.var0_1 = IntVar()
-        # Checkbutton(self.newWindow, text="Delete (CAF-based)", variable=self.var0_1, command=self.update_txt0_1).grid(row=3, sticky=W, padx=200, pady=10)
+        Checkbutton(self.newWindow, text="Delete (CAF-based)", variable=self.var0_1, command=self.update_txt0_1).grid(row=3, sticky=W, padx=200, pady=10)
         
+
+        self.radius=IntVar()
+        Label(self.newWindow, text="Inpaint_radius").grid(row=3,sticky=W, rowspan=2, padx=400, pady=10)
+        self.radius=Scale(self.newWindow, from_=3, to=200, orient=HORIZONTAL)
+        self.radius.grid(row=3, sticky=W, padx=525, rowspan=2)
+        self.radius.set(55)
+
+
         self.var1_0 = IntVar()
         Checkbutton(self.newWindow, text="CopyPaste (Select-based)", variable=self.var1_0, command=self.update_txt1_0).grid(row=4, sticky=W, pady=10)
         
         self.var1_1 = IntVar()
         Checkbutton(self.newWindow, text="Delete (Select-based)", variable=self.var1_1, command=self.update_txt1_1).grid(row=4, sticky=W, padx=200, pady=10)
         
-        self.normalize_flag = IntVar()
-        Checkbutton(self.newWindow, text="Normalize", variable=self.normalize_flag).grid(row=4, sticky=W, padx=400, pady=10)
-
         self.var2 = IntVar()
-        Checkbutton(self.newWindow, text="Object Insertion ", variable=self.var2, command=self.update_txt2).grid(row=5, sticky=W, pady=5)
+        Checkbutton(self.newWindow, text="Object Insertion ", variable=self.var2, command=self.update_txt2).grid(row=5, sticky=W, pady=10)
         
+        self.normalize_flag = IntVar()
+        Checkbutton(self.newWindow, text="Normalize", variable=self.normalize_flag).grid(row=5, sticky=W, padx=200, pady=10)
+
+
+        self.obj_weights_scales=IntVar()
+        Label(self.newWindow, text="Obj_weights_scale").grid(row=6,sticky=W, rowspan=2, pady=10)
+        self.obj_weights_scales=Scale(self.newWindow, from_=1, to=100, orient=HORIZONTAL)
+        self.obj_weights_scales.grid(row=6, sticky=W, padx=180, rowspan=2)
+        self.obj_weights_scales.set(50)
+
+
 
         self.obj_thickness=IntVar()
-        Label(self.newWindow, text="Object_thickness").grid(row=6,sticky=W, rowspan=2, pady=10)
-        self.obj_thickness=Scale(self.newWindow, from_=1, to=40, orient=HORIZONTAL)
-        self.obj_thickness.grid(row=6, sticky=W, padx=180, rowspan=2)
+        Label(self.newWindow, text="Object_thickness").grid(row=8,sticky=W, rowspan=2, pady=10)
+        self.obj_thickness=Scale(self.newWindow, from_=1, to=100, orient=HORIZONTAL)
+        self.obj_thickness.grid(row=8, sticky=W, padx=180, rowspan=2)
         self.obj_thickness.set(10)
         
         self.obj_opacity=IntVar()
-        Label(self.newWindow, text="Object_opacity").grid(row=9,sticky=W, rowspan=2, pady=10)
+        Label(self.newWindow, text="Object_opacity").grid(row=11,sticky=W, rowspan=2, pady=10)
         self.obj_opacity=Scale(self.newWindow, from_=1, to=10, orient=HORIZONTAL)
-        self.obj_opacity.grid(row=9, sticky=W, padx=180, rowspan=2)
+        self.obj_opacity.grid(row=11, sticky=W, padx=180, rowspan=2)
         self.obj_opacity.set(10)
         
         self.insert_onto_layer_index=IntVar()
-        Label(self.newWindow, text="Insert_onto_layer_index").grid(row=11,sticky=W, rowspan=2, pady=10)
+        Label(self.newWindow, text="Insert_onto_layer_index").grid(row=14,sticky=W, rowspan=2, pady=10)
         self.insert_onto_layer_index=Scale(self.newWindow, from_=0, to=self.PigNum-1, orient=HORIZONTAL)
-        self.insert_onto_layer_index.grid(row=11, sticky=W, padx=180, rowspan=2)
+        self.insert_onto_layer_index.grid(row=14, sticky=W, padx=180, rowspan=2)
         self.insert_onto_layer_index.set(self.PigNum-1)
 
+
         
 
 
-        Button(self.newWindow, text='Execute', command=self.Execute).grid(row=14, sticky=W, pady=15)
+        Button(self.newWindow, text='Execute', command=self.Execute).grid(row=17, sticky=W, pady=15)
         
-        Button(self.newWindow, text='Reset', command=self.Reset).grid(row=14, sticky=W, padx=120, pady=15)
+        Button(self.newWindow, text='Reset', command=self.Reset).grid(row=17, sticky=W, padx=120, pady=15)
 
-        Button(self.newWindow, text='Save', command=self.save_as).grid(row=14, sticky=W, padx=240, pady=15)
+        Button(self.newWindow, text='Save', command=self.save_as).grid(row=17, sticky=W, padx=240, pady=15)
 
-        Button(self.newWindow, text='Quit', command=self.Quit).grid(row=14, sticky=W, padx=360, pady=15)
+        Button(self.newWindow, text='Quit', command=self.Quit).grid(row=17, sticky=W, padx=360, pady=15)
     
     
     def update_txt0_0(self):
@@ -637,8 +804,9 @@ class Copy_Paste_Insert_Delete_app:
 
 
     def update_status(self):
-        if self.var3.get()==1:
-            self.normalize_flag.set(1) ### PD version need normalize.
+        pass
+        # if self.var3.get()==1:
+        #     self.normalize_flag.set(1) ### PD version need normalize.
     
     def update_status2(self):
 
@@ -683,8 +851,11 @@ class Copy_Paste_Insert_Delete_app:
             self.var_list["p-"+str(i)].set(0)
 
         self.showing=0
-
-        self.new_master.destroy() ##close results window
+        
+        if self.new_master is not None:
+            self.new_master.destroy() ##close results window
+        
+        self.user_select_indices=np.zeros(self.PigNum, dtype=np.uint8)
 
 
 
@@ -707,7 +878,7 @@ class Copy_Paste_Insert_Delete_app:
         width,height=img.size
         # print width, height
         if option==0:
-            self.canvas = tk.Canvas(master, width=width, height=height, cursor="cross")
+            self.canvas = tk.Canvas(master, width=width, height=height, highlightthickness=0, borderwidth=0, cursor="cross")
             self.canvas.pack(side="top", fill="both", expand=True)
         self.tk_im = ImageTk.PhotoImage(img)
         self.canvas.create_image(0,0,anchor="nw",image=self.tk_im)
@@ -753,7 +924,9 @@ class Copy_Paste_Insert_Delete_app:
                                      self.mask, 
                                      self.dst_y, 
                                      self.dst_x,
-                                     self.normalize_flag.get())
+                                     self.normalize_flag.get(),
+                                     self.obj_weights_scales.get()/10.0
+                                     )
 
             ### delete (select-based)
             if self.var1_1.get()==1:
@@ -763,8 +936,30 @@ class Copy_Paste_Insert_Delete_app:
                                          imsize, 
                                          self.mask,
                                          chosed_indices,
-                                         self.normalize_flag.get())
-                
+                                         self.normalize_flag.get()
+                                         )
+            
+            if self.var0_0.get()==1: ### copy paste (inpaint based)
+                output=object_paste_KS_inpaint_based(self.AllData.KM_pigments, 
+                                                     self.AllData.KM_weights, 
+                                                     imsize, 
+                                                     self.mask, 
+                                                     self.radius.get(), 
+                                                     self.dst_y, 
+                                                     self.dst_x,
+                                                     self.normalize_flag.get(),
+                                                     self.obj_weights_scales.get()/10.0
+                                                     )
+
+            if self.var0_1.get()==1: ### remove (inpaint based)
+                output=object_remove_KS_inpaint_based(self.AllData.KM_pigments, 
+                                                     self.AllData.KM_weights, 
+                                                     imsize, 
+                                                     self.mask, 
+                                                     self.radius.get(),  
+                                                     self.normalize_flag.get()
+                                                     )
+
 
  
         ###PD version
@@ -797,7 +992,9 @@ class Copy_Paste_Insert_Delete_app:
                                      self.mask, 
                                      self.dst_y, 
                                      self.dst_x,
-                                     self.normalize_flag.get())
+                                     self.normalize_flag.get(),
+                                     self.obj_weights_scales.get()/10.0
+                                     )
 
 
             ### delete (select-based)
@@ -807,7 +1004,8 @@ class Copy_Paste_Insert_Delete_app:
                                          imsize, 
                                          self.mask,
                                          chosed_indices,
-                                         self.normalize_flag.get())
+                                         self.normalize_flag.get()
+                                         )
 
         
         self.Show_results(output)
@@ -822,7 +1020,7 @@ class Copy_Paste_Insert_Delete_app:
         if self.showing==0:
             self.new_master=tk.Toplevel()
             self.new_master.title('Results')
-            self.new_canvas = tk.Canvas(self.new_master, width=width, height=height, cursor="cross")
+            self.new_canvas = tk.Canvas(self.new_master, width=width, height=height, highlightthickness=0, borderwidth=0, cursor="cross")
             self.new_canvas.pack(side="top", fill="both", expand=True)
             self.showing=1
 

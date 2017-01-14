@@ -15,13 +15,13 @@ from Constant_Values import *
 
 
 class Thickness_Scattering_Weights_modification_app:
-    
+
     def __init__(self, controller):
         self.master=controller.master
         self.canvas=controller.canvas
         self.mask=controller.mask
 
-        if self.mask==None:
+        if self.mask is None:
             print "no input mask"
         else:
             print self.mask.shape
