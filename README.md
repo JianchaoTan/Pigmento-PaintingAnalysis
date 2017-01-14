@@ -73,3 +73,37 @@ You need create a layer order file manually: "order1.txt" and put it in /wheatfi
 
 	$ python Editing_GUI.py
 ```
+
+
+
+
+
+# For whole pipeline in Tan2016
+
+#### Extract palettes.
+
+```sh
+	$ cd /new_pipeline_executable
+
+	$ python Extract_PD_palettes.py wheatfield-crop-steve.png 6 /wheatfield-crop
+```
+
+
+#### Extract layers. Like before, you need a different "order1.txt" file for different examples, and same "weights-poly3-opaque400-dynamic40000.js" for all examples. You can just simply set "order1.txt" content as 0 1 2 3 4 5 in this example
+
+```sh
+	$ cd /new_pipeline_executable
+
+	$ python Extract_PD_layers.py  /wheatfield-crop wheatfield-crop-steve.png order1.txt wheatfield-crop-steve-6-PD_palettes.js  --weights weights-poly3-opaque400-dynamic40000.js  --solve-smaller-factor 2 --save-every 50
+```
+
+
+#### For Tan2016 global recoloring GUI:
+
+##### 1. Go to this link: [Tan2016 PD recoloring GUI](https://yig.github.io/image-rgb-in-3D/)
+##### 2. Drag an image into the browser window. For example: "wheatfield-crop-steve.png". Rotate by dragging with the mouse.
+##### 3. Drag a convex hull JSON file into the browser window. For example: "wheatfield-crop-steve-6-PD_palettes.js"
+##### 4. Drag a weights JSON file into the browser window. For example: "wheatfield-crop-steve-6-PD_mixing-weights.js"
+##### 5. Recolor by dragging vertices of the convex hull. Recoloring results are shown in real-time. Click the recolored image to save it to disk, Or you can also click "Save_Everything" in browser to save changed everything, including changed vertices. 
+
+##### Tip: Convex hull vertices are dragged parallel to the view plane. It is easy to drag the vertex outside the RGB cube (imaginary color). This works, but may not be desired. It may be necessary to interleave vertex dragging with camera rotation to move a vertex to a desired location.
