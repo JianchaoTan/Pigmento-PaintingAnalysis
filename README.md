@@ -81,7 +81,7 @@ You need create a layer order file manually: "order1.txt" and put it in /wheatfi
 # For whole pipeline in Tan2016
 
 #### 1. Extract palettes:
-All results will saved in a created folder "Tan2016_PD_results"
+All results will saved in a created folder "Tan2016_PD_results", "/wheatfield-crop" in below command is example folder name, and "6" is palette size that user choose.
 
 ```sh
 	$ cd new_pipeline_executable
@@ -91,7 +91,7 @@ All results will saved in a created folder "Tan2016_PD_results"
 
 
 #### 2. Extract layers. 
-Like before, you need a different "order1.txt" file for different examples, and same "weights-poly3-opaque400-dynamic40000.js" for all examples. You can just simply set "order1.txt" content as 0 1 2 3 4 5 in this example.  All results will saved in a created folder "Tan2016_PD_results"
+Like before, you need a different "order1.txt" file for different examples, and same "weights-poly3-opaque400-dynamic40000.js" for all examples. You can just simply set "order1.txt" content as 0 1 2 3 4 5 in this example.  All results will saved in a created folder "Tan2016_PD_results". Actually, below command format is same as before, I only change the code filename to "Extract_PD_layers.py" and change input palette filename to "wheatfield-crop-steve-6-PD_palettes.js". 
 
 ```sh
 	$ cd new_pipeline_executable
