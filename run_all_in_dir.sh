@@ -54,8 +54,8 @@ EOF
 			$dir/log.txt \
 			$dir/primary_pigments_color-${p}.png \
 			$dir/primary_pigments_*_curve-*.png \
-			$dir/*-final_recursivelevel--fixed_KS-reconstructed.png \
-			$dir/*-final_recursivelevel--mixing_weights_map-*.png \
+			$dir/Application_Files/*-KM_*.png \
+			$dir/Application_Files/*-PD_*.png \
 			webpage/$dir
 		cp -r $dir/Application_Files applications/$dir
 		mv $dir output/

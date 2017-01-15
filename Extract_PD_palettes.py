@@ -58,7 +58,12 @@ if __name__=="__main__":
     	json.dump({"vs":Hull_vertices.reshape((-1,3)).tolist()}, myfile)
 
     Hull_vertices=Hull_vertices.reshape((1, M, 3))
-    Image.fromarray(Hull_vertices).save(output_prefix+"-PD_palettes.png")
+    palette_images=np.zeros((50,50*M,3),dtype=np.uint8)
+
+    for i in range(M):
+        palette_images[:,50*i:50*i+50,:]=Hull_vertices[:,i:i+1,:]
+
+    Image.fromarray(palette_images).save(output_prefix+"-PD_palettes.png")
 
 
 
