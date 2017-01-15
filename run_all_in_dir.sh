@@ -22,11 +22,15 @@ touch $rows
 
 for p in 5 4 6; do
 	for image in $indir/*; do
-		./run_one_image.sh $image $p
-
 		base="`basename ${image%.*}`"
 		input="${base}.png"
 		dir="${base}-${p}"
+
+		if [ -d output/$dir ]; then
+			mv output/$dir $dir
+		else
+			./run_one_image.sh $image $p
+		fi
 
 		pattern="$dir/*-final_recursivelevel--fixed_KS-reconstructed.png"
 		files=( $pattern )
@@ -43,7 +47,7 @@ for p in 5 4 6; do
 </tr>
 EOF
 
-		mkdir webpage/$dir
+		mkdir -p webpage/$dir
 		mkdir -p applications/$dir
 		cp $dir/$input \
 			$dir/index.html \

@@ -39,6 +39,7 @@ for i in $(seq 0 $COUNT); do
 	echo $i >> $dir/order1.txt;
 done
 
+if true; then
 python \
 	step1_ANLS_with_autograd.py \
 	$image \
@@ -62,7 +63,9 @@ python \
 	400 \
 	1 \
 	0 2>&1 | tee -a $dir/$log
+fi
 
+if true; then
 python \
 	fast_energy_RGB_lap_adjusted_weights.py \
 	 /$dir \
@@ -71,9 +74,19 @@ python \
 	 primary_pigments_color_vertex-${pigments}.js \
 	 --weights weights-poly3-opaque400-dynamic40000.js \
 	 --solve-smaller-factor 2 --save-every 50 2>&1 | tee -a $dir/$log
+fi
+
+if true; then
+python \
+	Extract_PD_palettes.py \
+	$image \
+	$pigments \
+	/$dir 2>&1 | tee -a $dir/$log
+fi
 
 cd $dir
 
+if true; then
 python \
 	../Solve_KM_mixing_model_fixed_KS_with_autograd.py \
 	$image \
@@ -87,7 +100,9 @@ python \
 	0.0 \
 	blf \
 	Yes 2>&1 | tee -a $log
+fi
 
+if true; then
 python \
 	../Solve_KM_layer_model_fixed_KS_with_autograd.py \
 	$image \
@@ -102,7 +117,7 @@ python \
 	blf \
 	Yes \
 	order1.txt 2>&1 | tee -a $log
-
+fi
 
 cat <<EOF >>$html
 <html>
