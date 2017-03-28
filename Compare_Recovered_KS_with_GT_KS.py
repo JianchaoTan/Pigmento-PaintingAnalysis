@@ -353,7 +353,8 @@ def Visualize_Recovered_KS_with_GT_KS(gt_H, H, path):
     S0=S0[final_permut]
     R0=R0[final_permut]
     R_rgb=R_rgb[final_permut]
-
+    
+    print "final_permut: ", final_permut
 
     Pigment=(R_rgb.reshape((-1,1,3))*255.0).round().astype(np.uint8)
 

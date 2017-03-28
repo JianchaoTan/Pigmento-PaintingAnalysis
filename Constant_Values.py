@@ -402,10 +402,11 @@ else:
     # cie1931new[:,1:]= np.identity(length2)
     # Illuminantnew=np.ones((length2,2))
 
+    # print "#####using wavelength number: ", len(cie1931new[:,1:])
+    # print cie1931new[:,1:]
+    # print Illuminantnew[:,1]
 
 
-# print cie1931new[:,1:]
-# print Illuminantnew[:,1]
 
 #### cmf function
 R_xyzcoeff=cie1931new[:,1:].transpose()

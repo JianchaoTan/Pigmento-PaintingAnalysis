@@ -396,7 +396,10 @@ class Recoloring_app:
 
 	def save_palette(self):
 	    hen = asksaveasfilename(defaultextension = '.png')
-	    Image.fromarray(self.Extracted_rgb.reshape((1,-1,3))).save(hen)
+	    palette=np.zeros((50,50*self.PigNum,3),dtype=np.uint8)
+	    for i in range(self.PigNum):
+	    	palette[:,50*i:50*i+50,:]=self.Extracted_rgb.reshape((1,-1,3))[:,i:i+1,:]
+	    Image.fromarray(palette).save(hen)
 
 
 

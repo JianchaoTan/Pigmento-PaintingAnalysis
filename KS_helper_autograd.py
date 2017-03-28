@@ -112,7 +112,7 @@ def equations_in_RealPigments(K,S,r,h, eps=1e-8, model='normal'): ## r is substr
     return R
 
 
-# def equations_in_RealPigments(K,S,r,h,eps=1e-8): ## r is substrate reflectance, h is layer thicness, all of parameters can either be array or scalar values
+# def equations_in_RealPigments(K,S,r,h,eps=1e-8, model='normal'): ## r is substrate reflectance, h is layer thicness, all of parameters can either be array or scalar values
 
 #     K=np.maximum(K,eps)
 #     S=np.maximum(S,eps)

@@ -1107,7 +1107,7 @@ def choose_good_initial_H_from_existing_H(image, arr, Existing_H, M, representat
         with open (output_prefix+"/Existing_H_expand_RGB_colors.js","w") as myfile:
             json.dump({'vs': (R_rgb*255).tolist()}, myfile)
 
-        Image.fromarray((R_rgb*255).round().astype(np.uint8).reshape((Num/2, -1, 3))).save(output_prefix+"/Existing_H_expand_RGB_colors.png")
+        Image.fromarray((R_rgb*255).round().astype(np.uint8).reshape((1, -1, 3))).save(output_prefix+"/Existing_H_expand_RGB_colors.png")
 
 
          
