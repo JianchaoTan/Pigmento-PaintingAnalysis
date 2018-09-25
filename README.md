@@ -37,7 +37,7 @@ User can give number of pigments, for example, "6" in the command line below.
 ```sh
 	$ cd new_pipeline_executable
 
-	$ python step1_ANLS_with_autograd.py wheatfield-crop-steve.png Existing_KS_parameter_KS.txt 2 None wheatfield-crop-steve-sampled_pixels-400 0 6 10.0 0.0 0.0 0.001 0.001 1e-6 /wheatfield-crop None 0 1 10000 400 1 0
+	$ python step1_ANLS_with_autograd.py wheatfield-crop-steve.png Existing_KS_parameter_KS.txt 2 None wheatfield-crop-steve-sampled_pixels-400 0 6 10.0 0.0 0.0 0.001 0.001 1e-6 /wheatfield-crop None 0 1 1000 400 1 0
 ```
 
 
