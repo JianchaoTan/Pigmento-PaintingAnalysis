@@ -1,4 +1,8 @@
-# README
+# Pigmento: Pigment-Based Image Analysis and Editing
+
+
+This code implements the pipeline described in the IEEE TVCG 2018 paper ["Pigmento: Pigment-Based Image Analysis and Editing"](https://cragl.cs.gmu.edu/pigmento/) Jianchao Tan, Stephen DiVerdi, Jingwan Lu and Yotam Gingold.
+
 * The input image should be a good size, like 600*600. If it is large image, it will be slow for weights map extraction or layer map extraction.
 
 
