@@ -4,7 +4,7 @@
 This code implements the pipeline described in the IEEE TVCG 2018 paper ["Pigmento: Pigment-Based Image Analysis and Editing"](https://cragl.cs.gmu.edu/pigmento/) Jianchao Tan, Stephen DiVerdi, Jingwan Lu and Yotam Gingold.
 
 * The input image should be a good size, like 600*600. If it is large image, it will be slow for weights map extraction or layer map extraction.
-
+* The flower image is from [Nel Jansen](https://nelseverydaypainting.blogspot.com/2011/04/dogwood-in-hood.html#links).
 
 #### Dependencies:
  * Python 2.7
