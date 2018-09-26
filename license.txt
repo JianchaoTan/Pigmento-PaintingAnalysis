@@ -1,0 +1,9 @@
+
+Code files below are for non-commercial research use:
+KS_helper.py
+KS_helper_autograd.py
+Constant_values.py
+Cross_bilateral_Filter.py
+
+
+All other code files are for non-commercial use. 

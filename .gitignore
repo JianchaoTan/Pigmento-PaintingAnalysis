@@ -1,7 +1,7 @@
 *.key
 *.png
-*.txt
 *.jpg
+*.txt
 *.a
 *.o
 *.pyc
