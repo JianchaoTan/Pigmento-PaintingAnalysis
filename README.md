@@ -41,7 +41,7 @@ User can give number of pigments, for example, "6" in the command line below.
 ```
 
 
-##### 2. Extract KM mixing weights:
+##### 2. Extract KM mixing weights (All layer results in our Pigmento paper are this option!):
 You can use default parameter values in command line directly, only need change example name.
 
 ```sh
