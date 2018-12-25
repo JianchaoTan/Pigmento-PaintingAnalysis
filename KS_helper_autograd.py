@@ -83,9 +83,10 @@ def Gamma_trans_img3(RGB_linear_img):
 
 
 @jit
-def mycoth(x):
+def mycoth(x, eps=1e-16):
     # print x.shape
     # print type(x)
+    x=np.maximum(x, eps) ## if x is too small, for example 1e-17, then will cause divide by zero error.
     ex = np.exp(2*x)
     return (ex+1.0)/(ex-1.0)
 
